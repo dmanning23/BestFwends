@@ -147,35 +147,38 @@ NextFrame
     and %00000001      ; Mask with 1 to isolate least significant bit
     tay ;store the current player in y
 
+SetP1ControllerMask subroutine
+
     ;set the controller mask properly depending on which player we are updating
-    beq SetP1ControllerMask
+    beq .SetP1ControllerMask
     lda #%00001111 ;check p2 joystick
     sta controllerMask
-    jmp DoneSettingControllerMask
+    jmp .DoneSettingControllerMask
 
-SetP1ControllerMask
+.SetP1ControllerMask
     lda #%11110000 ;this mask is used by the MoveJoystick routine to check p1 joystick
     sta controllerMask
 
-DoneSettingControllerMask
+.DoneSettingControllerMask
+
+FlipPlayerSprite subroutine
 
     ;flip the player if necessary
     lda FaceRight1,y
-    bne FlipPlayerSpriteRight
+    bne .FlipPlayerSpriteRight
 
     ;Face the player to the left
     lda #%00001000
     sta REFP0
     sta REFP1
-    jmp DoneFlippingPlayerSprite
+    jmp .DoneFlippingPlayerSprite
 
-FlipPlayerSpriteRight
+.FlipPlayerSpriteRight
     lda #0
     sta REFP0
     sta REFP1
-    jmp DoneFlippingPlayerSprite
 
-DoneFlippingPlayerSprite
+.DoneFlippingPlayerSprite
 
     ;Set the horizontal screen position of the correct player
     lda XPos1,y
@@ -195,8 +198,7 @@ DoneFlippingPlayerSprite
     sbc XVel1,y   ; Add second value to accumulator
     sta XPos1,y         ; Store the sum in result memory location
 
-    ;TODO: if the player position underflowed, set to 156
-    ;if the player position overflowed, set to 0
+    ;if the player position underflowed, set to 156
     cmp #157
     bcc DoneClampingHorizontalUnderflow
     lda #156
@@ -333,10 +335,14 @@ CheckMovingAtAll
     beq DoneUpdateHorizontalMovement ;if the player is not moving, done updating the player's horizontal velocity
 
     ;if the player is moving:
-    ;TODO: face the direction of the player movement
+    ;face the direction of the player movement
+    lda XDirRight1,y
+    sta FaceRight1,y
     jmp DeceleratePlayer ;go to teh decelerate step
 
 BrakePlayer subroutine
+
+    ;TODO: the player can't brake when in the rolling state?
 
     ;is the player running?
     lda XVel1,y
