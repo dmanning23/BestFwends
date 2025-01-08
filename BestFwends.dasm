@@ -91,11 +91,11 @@ Start
     sta YPos2
 
     ;set the player 1 x position, right side of screen
-    lda #0
+    lda #9
     sta XPos1
 
     ;set the player 2 x position, left side of screen
-    lda #156
+    lda #147
     sta XPos2
     
     ;initialize all the velocities
@@ -114,6 +114,7 @@ Start
     ;make both players face right
     lda #1
     sta FaceRight1
+    lda #0
     sta FaceRight2
 
     ;reset the counter
@@ -347,7 +348,6 @@ BrakePlayer subroutine
     ;is the player running?
     lda XVel1,y
     cmp #3
-    bcc .BrakePlayerNotRunning
 
     ;TODO: Since the player is running, change the players state to Braking
 
