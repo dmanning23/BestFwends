@@ -91,11 +91,11 @@ Start
     sta YPos2
 
     ;set the player 1 x position, right side of screen
-    lda #5
+    lda #0
     sta XPos1
 
     ;set the player 2 x position, left side of screen
-    lda #151
+    lda #156
     sta XPos2
     
     ;initialize all the velocities
@@ -158,6 +158,24 @@ SetP1ControllerMask
     sta controllerMask
 
 DoneSettingControllerMask
+
+    ;flip the player if necessary
+    lda FaceRight1,y
+    bne FlipPlayerSpriteRight
+
+    ;Face the player to the left
+    lda #%00001000
+    sta REFP0
+    sta REFP1
+    jmp DoneFlippingPlayerSprite
+
+FlipPlayerSpriteRight
+    lda #0
+    sta REFP0
+    sta REFP1
+    jmp DoneFlippingPlayerSprite
+
+DoneFlippingPlayerSprite
 
     ;Set the horizontal screen position of the correct player
     lda XPos1,y
@@ -318,12 +336,12 @@ CheckMovingAtAll
     ;TODO: face the direction of the player movement
     jmp DeceleratePlayer ;go to teh decelerate step
 
-BrakePlayer
+BrakePlayer subroutine
 
     ;is the player running?
     lda XVel1,y
     cmp #3
-    bcc BrakePlayerNotRunning
+    bcc .BrakePlayerNotRunning
 
     ;TODO: Since the player is running, change the players state to Braking
 
@@ -336,7 +354,7 @@ BrakePlayer
     ;done updating the player's horizontal velocity
     jmp DoneUpdateHorizontalMovement
 
-BrakePlayerNotRunning
+.BrakePlayerNotRunning
 
     ;Since the player is walking (moving less than 2), set their velocity to 0
     lda #0
@@ -345,7 +363,7 @@ BrakePlayerNotRunning
     ;done updating the player's horizontal velocity
     jmp DoneUpdateHorizontalMovement
 
-IncrementPlayerVelocity
+IncrementPlayerVelocity subroutine
 
     lda XVel1,y ;Load the value into accumulator
     clc         ;Clear carry flag
@@ -354,9 +372,9 @@ IncrementPlayerVelocity
     
     ;Clamp the velocity to the max velocity
     lda XVel1,y ;Load the value to check
-    cmp #$05    ;Compare with max velocity
-    bcc NoClamp ;Branch if value < 8 (Carry Clear means less than)
-    lda #$05    ;If we get here, value was >= max velocity, so load max velocity
+    cmp #$06    ;Compare with max velocity
+    bcc .NoClamp ;Branch if value < 8 (Carry Clear means less than)
+    lda #$06    ;If we get here, value was >= max velocity, so load max velocity
     sta XVel1,y ;Store it back
 
     ;lda YVel1,y     ; Load the value to check
@@ -365,19 +383,19 @@ IncrementPlayerVelocity
     ;lda #$05      ; If we get here, value was >= max velocity, so load max velocity
     ;sta YVel1,y     ; Store it back
 
-NoClamp
+.NoClamp
     ;Continue with rest of program
     jmp DoneUpdateHorizontalMovement
 
-DeceleratePlayer
+DeceleratePlayer subroutine
 
     lda XVel1,y ;Load the velocity
-    beq SkipDeceleratePlayer ;If XVel1 = 0, skip deceleration
+    beq .SkipDeceleratePlayer ;If XVel1 = 0, skip deceleration
     sec ;Set carry flag
     sbc #1 ;Subtract 1
     sta XVel1,y ;Store the result back
 
-SkipDeceleratePlayer
+.SkipDeceleratePlayer
 
 DoneUpdateHorizontalMovement
 
@@ -397,16 +415,16 @@ DoneUpdateMovement
     and #$01
     beq DrawP1
 
-DrawP2
+DrawP2 subroutine
     ldx #192	; X = 192 scanlines
-LVScan2
+.LVScan
     txa		; X -> A
     sec		; set carry for subtract
     sbc YPos2	; local coordinate
     cmp #SpriteHeight ; in sprite?
-    bcc InSprite2	; yes, skip over next
+    bcc .InSprite	; yes, skip over next
     lda #0		; not in sprite, load 0
-InSprite2
+.InSprite
     lsr        ; Shift right (divide by 2)
     ;lsr        ; Shift right again (divide by 4)
     tay		; local coord -> Y
@@ -423,19 +441,19 @@ InSprite2
     sta COLUP1	; store color
 
     dex		; decrement X
-    bne LVScan2	; repeat until 192 lines
+    bne .LVScan	; repeat until 192 lines
     jmp OverScan
     
-DrawP1
+DrawP1 subroutine
     ldx #192	; X = 192 scanlines
-LVScan1
+.LVScan
     txa		; X -> A
     sec		; set carry for subtract
     sbc YPos1	; local coordinate
     cmp #SpriteHeight ; in sprite?
-    bcc InSprite1	; yes, skip over next
+    bcc .InSprite	; yes, skip over next
     lda #0		; not in sprite, load 0
-InSprite1
+.InSprite
     lsr        ; Shift right (divide by 2)
     ;lsr        ; Shift right again (divide by 4)
     tay		; local coord -> Y
@@ -452,7 +470,7 @@ InSprite1
     sta COLUP1	; store color
 
     dex		; decrement X
-    bne LVScan1	; repeat until 192 lines
+    bne .LVScan	; repeat until 192 lines
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; 29 lines of overscan
@@ -471,12 +489,12 @@ OverScan
 ; SetHorizPos routine
 ; A = X coordinate
 ; X = player number (0 or 1)
-SetHorizPos
+SetHorizPos subroutine
 	sta WSYNC	; start a new line
 	sec		; set carry flag
-DivideLoop
+.DivideLoop
 	sbc #15		; subtract 15
-	bcs DivideLoop	; branch until negative
+	bcs .DivideLoop	; branch until negative
 	eor #7		; calculate fine offset
 	asl
 	asl
