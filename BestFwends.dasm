@@ -106,16 +106,16 @@ Start
     sta YVel2
 
     ;initialize which direction the player is moving on each axis
-    sta XDirRight1
-    sta XDirRight2
     sta YDirDown1
     sta YDirDown2
 
-    ;make both players face right
+    ;make both players face right and move in the correct directions
     lda #1
     sta FaceRight1
+    sta XDirRight1
     lda #0
     sta FaceRight2
+    sta XDirRight2
 
     ;reset the counter
     lda #0
@@ -188,6 +188,9 @@ FlipPlayerSprite subroutine
     lda XPos1,y
     ldx #1
     jsr SetHorizPos
+
+    sta WSYNC	; sync w/ scanline
+    sta HMOVE	; apply fine offsets
 
     ;is the player moving right?
     lda XDirRight1,y
@@ -406,9 +409,6 @@ DeceleratePlayer subroutine
 DoneUpdateHorizontalMovement
 
 DoneUpdateMovement
-
-    sta WSYNC	; sync w/ scanline
-    sta HMOVE	; apply fine offsets
 
     TIMER_WAIT
 
