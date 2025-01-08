@@ -17,7 +17,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SpriteHeight	equ 14*4
+SpriteHeight	equ 14*2
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
@@ -25,10 +25,38 @@ SpriteHeight	equ 14*4
     seg.u Variables
     org $80
 
-XPos1		.byte
-YPos1		.byte
-XPos2		.byte
-YPos2		.byte
+;The player's X,Y position on the screen
+XPos1       .byte
+XPos2       .byte
+YPos1       .byte
+YPos2       .byte
+
+;The player's absolute X,Y velocity
+;Valid values are 0 - 5
+;Velocity > 2 equals running
+XVel1       .byte
+XVel2       .byte
+YVel1       .byte
+YVel2       .byte
+
+;Which direction the player is moving.
+;0 = Left, Up
+;1 = Right, Down
+XDirRight1  .byte
+XDirRight2  .byte
+YDirDown1   .byte
+YDirDown2   .byte
+
+;Which direction the player is facing
+;0 = Left
+;1 = Right
+FaceRight1   .byte
+FaceRight2   .byte
+
+;Player states:
+
+controllerMask  .byte ;This variable is used to mask the controller input to map to p1 or p2
+
 counter .byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,7 +69,7 @@ Start
     CLEAN_START
     
     ; set to quad
-    lda #7
+    lda #5
     sta NUSIZ0
     sta NUSIZ1
 
@@ -52,16 +80,45 @@ Start
     sta RESP1
     sta HMP0
     sta HMP1
+    
+    ;Playfield range:
+    ;vert range: 0 - 164
+    ;horiz range: 0 - 156
+    
+    ;set both players to the center horizontally
+    lda #72
+    sta YPos1
+    sta YPos2
 
     ;set the player 1 x position, right side of screen
-    lda #0
-    sta YPos1
+    lda #5
     sta XPos1
 
     ;set the player 2 x position, left side of screen
-    lda #128
-    sta YPos2
+    lda #151
     sta XPos2
+    
+    ;initialize all the velocities
+    lda #0
+    sta XVel1
+    sta XVel2
+    sta YVel1
+    sta YVel2
+
+    ;initialize which direction the player is moving on each axis
+    sta XDirRight1
+    sta XDirRight2
+    sta YDirDown1
+    sta YDirDown2
+
+    ;make both players face right
+    lda #1
+    sta FaceRight1
+    sta FaceRight2
+
+    ;reset the counter
+    lda #0
+    sta counter
 
 NextFrame
     lsr SWCHB	; test Game Reset switch
@@ -70,7 +127,10 @@ NextFrame
     ; 1 + 3 lines of VSYNC
     VERTICAL_SYNC
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; 35 lines of underscan
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     TIMER_SETUP 35
     
     lda #0
@@ -79,80 +139,263 @@ NextFrame
     sta HMP0
     sta HMP1
 
-    ; animate X and Y coordinates
-    ; NOTE: when X is too close to the right side,
-    ; we risk using an extra scanline
-    inc XPos1
-    inc YPos1
-    dec XPos2
-    dec YPos2
+	;Increment the frame counter 
     inc counter
 
     ;Since we are only drawing one player per frame, which one needs to have x pos set?
     lda counter
-    and #$01      ; Mask with 1 to isolate least significant bit
-    beq SetP2Horiz
+    and %00000001      ; Mask with 1 to isolate least significant bit
+    tay ;store the current player in y
 
-    ;Set the x position of the first player
-SetP1Horiz
-    lda XPos1
+    ;set the controller mask properly depending on which player we are updating
+    beq SetP1ControllerMask
+    lda #%00001111 ;check p2 joystick
+    sta controllerMask
+    jmp DoneSettingControllerMask
+
+SetP1ControllerMask
+    lda #%11110000 ;this mask is used by the MoveJoystick routine to check p1 joystick
+    sta controllerMask
+
+DoneSettingControllerMask
+
+    ;Set the horizontal screen position of the correct player
+    lda XPos1,y
     ldx #0
     jsr SetHorizPos
-    lda XPos1
-    ldx #1
-    jsr SetHorizPos
-    jmp DoneSetHorizPos
-
-    ;Set the x position of the 2nd player
-SetP2Horiz
-    lda XPos2
-    ldx #0
-    jsr SetHorizPos
-    lda XPos2
+    lda XPos1,y
     ldx #1
     jsr SetHorizPos
 
-DoneSetHorizPos
+    ;is the player moving right?
+    lda XDirRight1,y
+    bne AddHorizontalVelocityToPosition
+
+    ;the player is mvoing left, subtract their position
+    lda XPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;TODO: if the player position underflowed, set to 156
+    ;if the player position overflowed, set to 0
+    cmp #157
+    bcc DoneClampingHorizontalUnderflow
+    lda #156
+    sta XPos1,y 
+
+DoneClampingHorizontalUnderflow
+
+    jmp DoneAddingVelocityToPosition
+
+AddHorizontalVelocityToPosition:
+
+    ;add velocity to position
+    lda XPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #157
+    bcc DoneClampingHorizontalOverflow
+    lda #0
+    sta XPos1,y 
+
+DoneClampingHorizontalOverflow
+
+    ;lda YPos1,y    ; Load first value into accumulator
+    ;clc                ; Clear carry flag before addition
+    ;adc YVel1,y   ; Add second value to accumulator
+    ;sta YPos1,y         ; Store the sum in result memory location
+
+DoneAddingVelocityToPosition
+
+    ;update velocity?
+    lda counter
+    and %00001110      ;Only run this once every 8 frames
+    beq UpdatePlayerMovement
+    jmp DoneUpdateMovement
+
+UpdatePlayerMovement
+
+    ;TODO: update the horizontal movement of the player
+    ;TODO: update the vertical movement of the player
+
+UpdateHorizontalMovement
+
+CheckHoldingRight
+
+    ;check if the player is holding right
+    lda #%10001000	;right?
+    and controllerMask
+    bit SWCHA
+    bne CheckHoldingLeft ;if not, go check if holding left
+
+    ;if they are:
+
+    ;set the player to facing right
+    lda #1
+    sta FaceRight1,y
+
+    jmp CheckMovingLeft ;go check if they are moving left
+
+CheckHoldingLeft
+
+    ;check if the player is holding left
+    lda #%01000100	;left?
+    and controllerMask
+    and SWCHA
+    bne CheckMovingAtAll ;if not, check if the player is moving at all
+
+    ;if they are:
+
+    ;set the player to facing left
+    lda #0
+    sta FaceRight1,y
+
+    ;go to check if they are moving right
+    jmp CheckMovingRight
+
+CheckMovingLeft
+
+    ;check if the player is moving left
+    lda XDirRight1,y
+
+    ;if they are, check if the player is StandingLeft
+    beq StandingLeft
+
+    ;if not, go increment the players velocity
+    jmp IncrementPlayerVelocity
+
+StandingLeft
+    ;check if the player is standing still
+    lda XVel1,y
+
+    ;the player is facing left and not standing still, they need to brake
+    bne BrakePlayer
+
+    ;the player is facing left, not moving, and holding right on the joystick
+    ;Set them to move right
+    lda #1
+    sta XDirRight1,y
+
+    ;increment their velocity
+    jmp IncrementPlayerVelocity
+
+CheckMovingRight
+
+    ;check if the player is moving right
+    lda XDirRight1,y
+    cmp #1
+    beq StandingRight ;if they are, check if the player is standing right
+
+    ;if not, go increment the player's velocity
+    jmp IncrementPlayerVelocity
+
+StandingRight
+    ;check if the player is standing still
+    lda XVel1,y
+
+    ;the player is facing right and not standing still, they need to brake
+    bne BrakePlayer
+
+    ;the player is facing right, not moving, and holding left on the joystick
+    ;Set them to move right
+    lda #0
+    sta XDirRight1,y
+
+    ;increment their velocity
+    jmp IncrementPlayerVelocity
+
+CheckMovingAtAll
+
+    ;check if the player is moving
+    lda XVel1,y
+    beq DoneUpdateHorizontalMovement ;if the player is not moving, done updating the player's horizontal velocity
+
+    ;if the player is moving:
+    ;TODO: face the direction of the player movement
+    jmp DeceleratePlayer ;go to teh decelerate step
+
+BrakePlayer
+
+    ;is the player running?
+    lda XVel1,y
+    cmp #3
+    bcc BrakePlayerNotRunning
+
+    ;TODO: Since the player is running, change the players state to Braking
+
+    ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
+    lda XVel1,y     ;Load the current velocity
+    sec             ;Set carry flag before subtraction
+    sbc #2          ;Subtract 2
+    sta XVel1,y     ;Store it back to memory
+    
+    ;done updating the player's horizontal velocity
+    jmp DoneUpdateHorizontalMovement
+
+BrakePlayerNotRunning
+
+    ;Since the player is walking (moving less than 2), set their velocity to 0
+    lda #0
+    sta XVel1,y
+
+    ;done updating the player's horizontal velocity
+    jmp DoneUpdateHorizontalMovement
+
+IncrementPlayerVelocity
+
+    lda XVel1,y ;Load the value into accumulator
+    clc         ;Clear carry flag
+    adc #$01    ;Add 1 to accumulator
+    sta XVel1,y ;Store it back to memory
+    
+    ;Clamp the velocity to the max velocity
+    lda XVel1,y ;Load the value to check
+    cmp #$05    ;Compare with max velocity
+    bcc NoClamp ;Branch if value < 8 (Carry Clear means less than)
+    lda #$05    ;If we get here, value was >= max velocity, so load max velocity
+    sta XVel1,y ;Store it back
+
+    ;lda YVel1,y     ; Load the value to check
+    ;cmp #$05      ; Compare with max velocity
+    ;bcc NoClamp   ; Branch if value < max velocity (Carry Clear means less than)
+    ;lda #$05      ; If we get here, value was >= max velocity, so load max velocity
+    ;sta YVel1,y     ; Store it back
+
+NoClamp
+    ;Continue with rest of program
+    jmp DoneUpdateHorizontalMovement
+
+DeceleratePlayer
+
+    lda XVel1,y ;Load the velocity
+    beq SkipDeceleratePlayer ;If XVel1 = 0, skip deceleration
+    sec ;Set carry flag
+    sbc #1 ;Subtract 1
+    sta XVel1,y ;Store the result back
+
+SkipDeceleratePlayer
+
+DoneUpdateHorizontalMovement
+
+DoneUpdateMovement
+
     sta WSYNC	; sync w/ scanline
     sta HMOVE	; apply fine offsets
 
     TIMER_WAIT
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; 192 lines of frame
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     ;Which player is being drawn this frame?
     lda counter
     and #$01
-    beq DrawP2
-
-DrawP1
-    ldx #192	; X = 192 scanlines
-LVScan1
-    txa		; X -> A
-    sec		; set carry for subtract
-    sbc YPos1	; local coordinate
-    cmp #SpriteHeight ; in sprite?
-    bcc InSprite1	; yes, skip over next
-    lda #0		; not in sprite, load 0
-InSprite1
-    lsr        ; Shift right (divide by 2)
-    lsr        ; Shift right again (divide by 4)
-    tay		; local coord -> Y
-
-    lda Sonic1,y	; lookup color
-    sta WSYNC	; sync w/ scanline
-    sta GRP0	; store bitmap
-    lda Sonic1Color,y ; lookup color
-    sta COLUP0	; store color
-
-    lda Sonic2,y	; lookup color
-    sta GRP1	; store bitmap
-    lda Sonic2Color,y ; lookup color
-    sta COLUP1	; store color
-
-    dex		; decrement X
-    bne LVScan1	; repeat until 192 lines
-    jmp OverScan
+    beq DrawP1
 
 DrawP2
     ldx #192	; X = 192 scanlines
@@ -165,7 +408,7 @@ LVScan2
     lda #0		; not in sprite, load 0
 InSprite2
     lsr        ; Shift right (divide by 2)
-    lsr        ; Shift right again (divide by 4)
+    ;lsr        ; Shift right again (divide by 4)
     tay		; local coord -> Y
 
     lda Tails1,y	; lookup color
@@ -181,10 +424,40 @@ InSprite2
 
     dex		; decrement X
     bne LVScan2	; repeat until 192 lines
+    jmp OverScan
+    
+DrawP1
+    ldx #192	; X = 192 scanlines
+LVScan1
+    txa		; X -> A
+    sec		; set carry for subtract
+    sbc YPos1	; local coordinate
+    cmp #SpriteHeight ; in sprite?
+    bcc InSprite1	; yes, skip over next
+    lda #0		; not in sprite, load 0
+InSprite1
+    lsr        ; Shift right (divide by 2)
+    ;lsr        ; Shift right again (divide by 4)
+    tay		; local coord -> Y
 
+    lda Sonic1,y	; lookup color
+    sta WSYNC	; sync w/ scanline
+    sta GRP0	; store bitmap
+    lda Sonic1Color,y ; lookup color
+    sta COLUP0	; store color
+
+    lda Sonic2,y	; lookup color
+    sta GRP1	; store bitmap
+    lda Sonic2Color,y ; lookup color
+    sta COLUP1	; store color
+
+    dex		; decrement X
+    bne LVScan1	; repeat until 192 lines
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; 29 lines of overscan
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 OverScan
-	
-; 29 lines of overscan
     TIMER_SETUP 29
     lda $0 ;dont draw the sprite in the overscan
     sta GRP0
