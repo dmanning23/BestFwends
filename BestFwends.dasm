@@ -527,12 +527,6 @@ IncrementPlayerVelocityVertical subroutine
     lda #$06    ;If we get here, value was >= max velocity, so load max velocity
     sta YVel1,y ;Store it back
 
-    ;lda YVel1,y     ; Load the value to check
-    ;cmp #$05      ; Compare with max velocity
-    ;bcc NoClamp   ; Branch if value < max velocity (Carry Clear means less than)
-    ;lda #$05      ; If we get here, value was >= max velocity, so load max velocity
-    ;sta YVel1,y     ; Store it back
-
 .NoClamp
     ;Continue with rest of program
     jmp DoneUpdateVerticalMovement
@@ -617,7 +611,7 @@ UpdatePosition subroutine
 
 .DoneClampingHorizontalUnderflow
 
-    jmp .DoneAddingVelocityToPosition
+    jmp .DoneAddingHorizontalVelocityToPosition
 
 .AddHorizontalVelocityToPosition:
 
@@ -635,12 +629,54 @@ UpdatePosition subroutine
 
 .DoneClampingHorizontalOverflow
 
-    ;lda YPos1,y    ; Load first value into accumulator
-    ;clc                ; Clear carry flag before addition
-    ;adc YVel1,y   ; Add second value to accumulator
-    ;sta YPos1,y         ; Store the sum in result memory location
+.DoneAddingHorizontalVelocityToPosition
 
-.DoneAddingVelocityToPosition
+
+
+
+
+    ;is the player moving down?
+    lda YDirDown1,y
+    beq .AddVerticalVelocityToPosition
+
+    ;the player is moving up, subtract their position
+    lda YPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position underflowed, set to 164
+    cmp #173
+    bcc .DoneClampingVerticalUnderflow
+    lda #172
+    sta YPos1,y 
+
+.DoneClampingVerticalUnderflow
+
+    jmp .DoneAddingVerticalVelocityToPosition
+
+.AddVerticalVelocityToPosition:
+
+    ;add velocity to position
+    lda YPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #173
+    bcc .DoneClampingVerticalOverflow
+    lda #0
+    sta YPos1,y 
+
+.DoneClampingVerticalOverflow
+
+.DoneAddingVerticalVelocityToPosition
+
+
+
+
+
 
     TIMER_WAIT
 
