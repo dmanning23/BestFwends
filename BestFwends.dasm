@@ -363,11 +363,24 @@ BrakePlayerHorizontal subroutine
 
     ;is the player running?
     lda XVel1,y
-    cmp #3
+    cmp RunningThreshold
+    bcs .IsRunning
 
+    ;if the player is walking, don't set them to braking
+    jmp .DoneCheckBraking
+
+    ;if the player is moving fast:
+.IsRunning:
     ;Since the player is running, change the players state to Braking
     lda #1
     sta Player1Braking,y
+
+.DoneCheckBraking
+
+    ;Check if the player is moving faster than 2
+    lda XVel1,y
+    cmp #3
+    bcc .BrakePlayerNotRunning
 
     ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
     lda XVel1,y     ;Load the current velocity
@@ -384,7 +397,7 @@ BrakePlayerHorizontal subroutine
     lda #0
     sta XVel1,y
 
-    ;done updating the player's horizontal velocity
+    ;done updating the player's vertical velocity
     jmp DoneUpdateHorizontalMovement
 
 IncrementPlayerVelocityHorizontal subroutine
@@ -537,11 +550,24 @@ BrakePlayerVertical subroutine
 
     ;is the player running?
     lda YVel1,y
-    cmp #3
+    cmp RunningThreshold
+    bcs .IsRunning
 
+    ;if the player is walking, don't set them to braking
+    jmp .DoneCheckBraking
+
+    ;if the player is moving fast:
+.IsRunning:
     ;Since the player is running, change the players state to Braking
     lda #1
     sta Player1Braking,y
+
+.DoneCheckBraking
+
+    ;Check if the player is moving faster than 2
+    lda YVel1,y
+    cmp #3
+    bcc .BrakePlayerNotRunning
 
     ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
     lda YVel1,y     ;Load the current velocity
@@ -688,6 +714,9 @@ CheckYWalking subroutine
     lda StandingState
     sta PlayerState1,y
 
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
     ;if the player's velocity is not equal to 0:
 .IsWalking:
     ;set the state to "walking"
@@ -716,9 +745,6 @@ DoneUpdatePlayer
 
 UpdatePlayerSprite
 
-    ;Make sure we have the correct variable in x
-    ldx #0
-
     ;Check which state the player is in
     lda PlayerState1,y
     cmp RunningState
@@ -740,55 +766,110 @@ UpdatePlayerSprite
 
 UpdateRunningSprite
 
-    ;Load the sprite counter
-    ldx spriteCounter
-
     ;Set the first player sprite
+    ldx #0
     lda #<SonicRunning11
     sta spritePtr1,x
     inx
     lda #>SonicRunning11
     sta spritePtr1,x
 
-    ;Reload the sprite counter
-    ldx spriteCounter
-
-    ;Set the second player sprite
-    lda #<SonicRunning12
-    sta spritePtr2,x
-    inx
-    lda #>SonicRunning12
-    sta spritePtr2,x
-
-    ;TODO: load the colors
-
     jmp DoneUpdatingPlayerSprite
 
 UpdateWalkingSprite
 
-    ;TODO
+    ldx #0
+    lda #<SonicWalking11
+    sta spritePtr1,x
+    inx
+    lda #>SonicWalking11
+    sta spritePtr1,x
+
+    jmp DoneUpdatingPlayerSprite
 
 UpdateBrakingSprite
 
-    ;TODO
+    ;TODO: braking animation
+    ldx #0
+    lda #<SonicBall11
+    sta spritePtr1,x
+    inx
+    lda #>SonicBall11
+    sta spritePtr1,x
+
+    jmp DoneUpdatingPlayerSprite
 
 UpdateRollingSprite
 
-    ;TODO
+    ;TODO: rolling animation
+    ldx #0
+    lda #<SonicBall11
+    sta spritePtr1,x
+    inx
+    lda #>SonicBall11
+    sta spritePtr1,x
+
+    jmp DoneUpdatingPlayerSprite
 
 UpdateStunnedSprite
 
-    ;TODO
+    ;TODO: stunned animation
+    ldx #0
+    lda #<SonicBall11
+    sta spritePtr1,x
+    inx
+    lda #>SonicBall11
+    sta spritePtr1,x
+
+    jmp DoneUpdatingPlayerSprite
 
 UpdateStandingSprite
 
-    ;TODO
+    ldx #0
+    lda #<SonicStanding11
+    sta spritePtr1,x
+    inx
+    lda #>SonicStanding11
+    sta spritePtr1,x
+
+    jmp DoneUpdatingPlayerSprite
 
 DoneUpdatingPlayerSprite
 
+    ;set up rest of the player sprites
 
+    ;Set the second player sprite
+    ldx spriteCounter
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #13                 ; Add 13 to the value
+    sta spritePtr2,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spritePtr2,x
 
+    ;Set the player color
+    ldx spriteCounter
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #26                 ; Point at the color frame
+    sta spriteColorPtr1,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spriteColorPtr1,x
 
+    ;Set the second player color
+    ldx spriteCounter
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #39                 ; Point at the color frame
+    sta spriteColorPtr2,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spriteColorPtr2,x
 
 
 
@@ -987,15 +1068,15 @@ DrawP1 subroutine
     ;lsr        ; Shift right again (divide by 4)
     tay		; local coord -> Y
 
-    lda SonicStanding11,y	; lookup color
+    lda (spritePtr1),y	; lookup color
     sta WSYNC	; sync w/ scanline
     sta GRP0	; store bitmap
-    lda SonicStandingColor11,y ; lookup color
+    lda (spriteColorPtr1),y ; lookup color
     sta COLUP0	; store color
 
-    lda SonicStanding12,y	; lookup color
+    lda (spritePtr2),y	; lookup color
     sta GRP1	; store bitmap
-    lda SonicStandingColor12,y ; lookup color
+    lda (spriteColorPtr2),y ; lookup color
     sta COLUP1	; store color
 
     dex		; decrement X
