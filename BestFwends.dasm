@@ -16,6 +16,10 @@ SpriteHeight	equ 13*2
     org $80
 
 ;The player's X,Y position on the screen
+;Playfield range:
+;vert range: 0 - 164
+;horiz range: 0 - 156
+;TODO: clean up playfield range magic numbers
 XPos1       .byte
 XPos2       .byte
 YPos1       .byte
@@ -28,6 +32,9 @@ XVel1       .byte
 XVel2       .byte
 YVel1       .byte
 YVel2       .byte
+
+MaxVelocity equ #06
+RunningThreshold equ #04
 
 ;Which direction the player is moving.
 ;0 = Left, Up
@@ -52,6 +59,28 @@ FaceRight2   .byte
 ;5 = Stunned
 PlayerState1 .byte
 PlayerState2 .byte
+
+StandingState   equ #00
+WalkingState    equ #01
+RunningState    equ #02
+BrakingState    equ #03
+RollingState    equ #04
+StunnedState    equ #05
+
+;Boolean for whether or not the player is braking
+Player1Braking .byte
+Player2Braking .byte
+
+;This is a counter used to update the player sprites
+spriteCounter .byte
+
+;This points at the current sprite being drawn
+spritePtr1 .word
+spritePtr2 .word
+
+;Pointer to the current color being drawn
+spriteColorPtr1 .word
+spriteColorPtr2 .word
 
 ;This variable is used to mask the controller input to map to p1 or p2
 controllerMask  .byte 
@@ -82,11 +111,7 @@ Start
     sta RESP1
     sta HMP0
     sta HMP1
-    
-    ;Playfield range:
-    ;vert range: 0 - 164
-    ;horiz range: 0 - 156
-    
+
     ;set both players to the center horizontally
     lda #72
     sta YPos1
@@ -111,6 +136,12 @@ Start
     sta YDirDown1
     sta YDirDown2
 
+    ;Set the states of the players
+    sta PlayerState1
+    sta PlayerState2
+    sta Player1Braking
+    sta Player2Braking
+
     ;make both players face right and move in the correct directions
     lda #1
     sta FaceRight1
@@ -119,9 +150,20 @@ Start
     sta FaceRight2
     sta XDirRight2
 
-    ;reset the counter
+    ;reset the counters
     lda #0
     sta counter
+    sta spriteCounter
+
+    ;reset the pointers
+    sta spritePtr1
+    sta spritePtr1+1
+    sta spritePtr2
+    sta spritePtr2+1
+    sta spriteColorPtr1
+    sta spriteColorPtr1+1
+    sta spriteColorPtr2
+    sta spriteColorPtr2+1
 
 NextFrame
     lsr SWCHB	; test Game Reset switch
@@ -169,8 +211,10 @@ SetP1ControllerMask subroutine
     ;update velocity?
     lda counter
     and %00001110      ;Only run this once every 8 frames
-    beq UpdatePlayerMovement
-    jmp DoneUpdateMovement
+    beq UpdatePlayer
+    jmp DoneUpdatePlayer
+
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -178,7 +222,11 @@ SetP1ControllerMask subroutine
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdatePlayerMovement
+UpdatePlayer
+
+    ;Set the player's braking flag to "not braking"
+    lda #0
+    sta Player1Braking,y
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -317,7 +365,9 @@ BrakePlayerHorizontal subroutine
     lda XVel1,y
     cmp #3
 
-    ;TODO: Since the player is running, change the players state to Braking
+    ;Since the player is running, change the players state to Braking
+    lda #1
+    sta Player1Braking,y
 
     ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
     lda XVel1,y     ;Load the current velocity
@@ -346,9 +396,9 @@ IncrementPlayerVelocityHorizontal subroutine
     
     ;Clamp the velocity to the max velocity
     lda XVel1,y ;Load the value to check
-    cmp #$06    ;Compare with max velocity
+    cmp MaxVelocity    ;Compare with max velocity
     bcc .NoClamp ;Branch if value < 8 (Carry Clear means less than)
-    lda #$06    ;If we get here, value was >= max velocity, so load max velocity
+    lda MaxVelocity    ;If we get here, value was >= max velocity, so load max velocity
     sta XVel1,y ;Store it back
 
 .NoClamp
@@ -366,18 +416,6 @@ DeceleratePlayerHorizontal subroutine
 .SkipDeceleratePlayer
 
 DoneUpdateHorizontalMovement
-
-
-
-
-
-
-
-
-
-
-
-
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -501,7 +539,9 @@ BrakePlayerVertical subroutine
     lda YVel1,y
     cmp #3
 
-    ;TODO: Since the player is running, change the players state to Braking
+    ;Since the player is running, change the players state to Braking
+    lda #1
+    sta Player1Braking,y
 
     ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
     lda YVel1,y     ;Load the current velocity
@@ -530,9 +570,9 @@ IncrementPlayerVelocityVertical subroutine
     
     ;Clamp the velocity to the max velocity
     lda YVel1,y ;Load the value to check
-    cmp #$06    ;Compare with max velocity
+    cmp MaxVelocity    ;Compare with max velocity
     bcc .NoClamp ;Branch if value < 8 (Carry Clear means less than)
-    lda #$06    ;If we get here, value was >= max velocity, so load max velocity
+    lda MaxVelocity    ;If we get here, value was >= max velocity, so load max velocity
     sta YVel1,y ;Store it back
 
 .NoClamp
@@ -553,19 +593,212 @@ DoneUpdateVerticalMovement
 
 
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Update Player State
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePlayerState
+
+CheckIsBraking
+
+    ;check if the player is braking
+    lda Player1Braking,y
+
+    ;if not, check if the player is running
+    beq CheckXRunning
+
+    ;if the player is braking:
+    
+    ;set their state to "Braking"
+    lda BrakingState
+    sta PlayerState1,y
+    
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
+CheckXRunning subroutine
+
+    ;check if the player's horizontal velocity is over the threshold for "running"
+    lda XVel1,y
+    cmp RunningThreshold
+    bcs .IsRunning
+
+    ;if not, check if the player is running vertically
+    jmp CheckYRunning
+
+    ;if the player is moving fast:
+.IsRunning:
+    ;set the state to "running"
+    lda RunningState
+    sta PlayerState1,y
+
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
+CheckYRunning subroutine
+
+    ;check if the player's vertial velocity is over the threshold for "running"
+    lda YVel1,y
+    cmp RunningThreshold
+    bcs .IsRunning
+
+    ;if not, check if the player is walking horizontally
+    jmp CheckXWalking
+
+    ;if the player is moving fast:
+.IsRunning:
+    ;set the state to "running"
+    lda RunningState
+    sta PlayerState1,y
+
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
+CheckXWalking subroutine
+
+    ;check if the player's horizontal velocity not equal to 0
+    lda XVel1,y
+    bne .IsWalking
+
+    ;if the player's velocity is 0:
+
+    ;check if the player is walking vertically
+    jmp CheckYWalking
+
+    ;if the player's velocity is not equal to 0:
+.IsWalking:
+    ;set the state to "walking"
+    lda WalkingState
+    sta PlayerState1,y
+
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
+CheckYWalking subroutine
+
+    ;check if the player's vertical velocity not equal to 0
+    lda YVel1,y
+    bne .IsWalking
+
+    ;if the player's velocity is 0:
+
+    ;set the player's state to "standing"
+    lda StandingState
+    sta PlayerState1,y
+
+    ;if the player's velocity is not equal to 0:
+.IsWalking:
+    ;set the state to "walking"
+    lda WalkingState
+    sta PlayerState1,y
+
+    ;finish updating state
+    jmp DoneUpdatingPlayerState
+
+DoneUpdatingPlayerState
+
+;Skip all the way down here if we aren't updating the player this frame
+DoneUpdatePlayer
 
 
 
 
 
 
-
-
-DoneUpdateMovement
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Update Player Positions
+    ; TODO: set the player sprite
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePlayerSprite
+
+    ;Make sure we have the correct variable in x
+    ldx #0
+
+    ;Check which state the player is in
+    lda PlayerState1,y
+    cmp RunningState
+    beq UpdateRunningSprite
+
+    cmp WalkingState
+    beq UpdateWalkingSprite
+
+    cmp BrakingState
+    beq UpdateBrakingSprite
+
+    cmp RollingState
+    beq UpdateRollingSprite
+
+    cmp StunnedState
+    beq UpdateStunnedSprite
+
+    jmp UpdateStandingSprite
+
+UpdateRunningSprite
+
+    ;Load the sprite counter
+    ldx spriteCounter
+
+    ;Set the first player sprite
+    lda #<SonicRunning11
+    sta spritePtr1,x
+    inx
+    lda #>SonicRunning11
+    sta spritePtr1,x
+
+    ;Reload the sprite counter
+    ldx spriteCounter
+
+    ;Set the second player sprite
+    lda #<SonicRunning12
+    sta spritePtr2,x
+    inx
+    lda #>SonicRunning12
+    sta spritePtr2,x
+
+    ;TODO: load the colors
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateWalkingSprite
+
+    ;TODO
+
+UpdateBrakingSprite
+
+    ;TODO
+
+UpdateRollingSprite
+
+    ;TODO
+
+UpdateStunnedSprite
+
+    ;TODO
+
+UpdateStandingSprite
+
+    ;TODO
+
+DoneUpdatingPlayerSprite
+
+
+
+
+
+
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Flip the player sprite if necessary
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -588,9 +821,22 @@ FlipPlayerSprite subroutine
 
 .DoneFlippingPlayerSprite
 
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Update Player Positions
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 UpdatePosition subroutine
 
-    ;Set the horizontal screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Set the horizontal screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     lda XPos1,y
     ldx #0
     jsr SetHorizPos
@@ -639,9 +885,11 @@ UpdatePosition subroutine
 
 .DoneAddingHorizontalVelocityToPosition
 
-
-
-
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Set the vertical screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     ;is the player moving down?
     lda YDirDown1,y
@@ -681,12 +929,9 @@ UpdatePosition subroutine
 
 .DoneAddingVerticalVelocityToPosition
 
-
-
-
-
-
     TIMER_WAIT
+
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -756,6 +1001,8 @@ DrawP1 subroutine
     dex		; decrement X
     bne .LVScan	; repeat until 192 lines
 
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; 29 lines of overscan
@@ -773,9 +1020,15 @@ OverScan
     ; total = 262 lines, go to next frame
     jmp NextFrame
 
-; SetHorizPos routine
-; A = X coordinate
-; X = player number (0 or 1)
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; SetHorizPos routine
+    ; A = X coordinate
+    ; X = player number (0 or 1)
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 SetHorizPos subroutine
 	sta WSYNC	; start a new line
 	sec		; set carry flag
@@ -790,6 +1043,8 @@ SetHorizPos subroutine
 	sta RESP0,x	; fix coarse position
 	sta HMP0,x	; set fine offset
 	rts		; return to caller
+
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -963,7 +1218,6 @@ SonicStanding12
   .byte %00011010 ; Row 12
   .byte %00000000 ; Row 13
 
-;Standing Color:
 SonicStandingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1028,97 +1282,6 @@ SonicWalking12
   .byte %00011010 ; Row 12
   .byte %00000000 ; Row 13
 
-SonicWalking21
-  .byte %00000000 ; Row 1
-  .byte %00100001 ; Row 2
-  .byte %00000000 ; Row 3
-  .byte %00100010 ; Row 4
-  .byte %00100100 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00010000 ; Row 7
-  .byte %00011100 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00100100 ; Row 12
-  .byte %01111110 ; Row 13
-
-SonicWalking22
-  .byte %00000000 ; Row 1
-  .byte %01000010 ; Row 2
-  .byte %01000010 ; Row 3
-  .byte %00000000 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00011010 ; Row 12
-  .byte %00000000 ; Row 13
-
-SonicWalking31
-  .byte %00000000 ; Row 1
-  .byte %00000010 ; Row 2
-  .byte %00010000 ; Row 3
-  .byte %00010100 ; Row 4
-  .byte %00010100 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00010000 ; Row 7
-  .byte %00011100 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00111110 ; Row 12
-  .byte %01100100 ; Row 13
-
-SonicWalking32
-  .byte %00000000 ; Row 1
-  .byte %00000100 ; Row 2
-  .byte %00100100 ; Row 3
-  .byte %00000000 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00000000 ; Row 12
-  .byte %00011010 ; Row 13
-
-SonicWalking41
-  .byte %00000000 ; Row 1
-  .byte %00000100 ; Row 2
-  .byte %00010000 ; Row 3
-  .byte %00011000 ; Row 4
-  .byte %00011000 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00010000 ; Row 7
-  .byte %00011100 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00111110 ; Row 12
-  .byte %01100100 ; Row 13
-
-SonicWalking42
-  .byte %00000000 ; Row 1
-  .byte %00001000 ; Row 2
-  .byte %00001000 ; Row 3
-  .byte %00000000 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00000000 ; Row 12
-  .byte %00011010 ; Row 13
-
-;Walking Color:
 SonicWalkingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1148,6 +1311,36 @@ SonicWalkingColor12
   .byte $0E ; Row 11
   .byte $86 ; Row 12
   .byte $00 ; Row 13
+
+SonicWalking21
+  .byte %00000000 ; Row 1
+  .byte %00100001 ; Row 2
+  .byte %00000000 ; Row 3
+  .byte %00100010 ; Row 4
+  .byte %00100100 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00010000 ; Row 7
+  .byte %00011100 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00100100 ; Row 12
+  .byte %01111110 ; Row 13
+
+SonicWalking22
+  .byte %00000000 ; Row 1
+  .byte %01000010 ; Row 2
+  .byte %01000010 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00011010 ; Row 12
+  .byte %00000000 ; Row 13
 
 SonicWalkingColor21
   .byte $88 ; Row 1
@@ -1179,6 +1372,36 @@ SonicWalkingColor22
   .byte $86 ; Row 12
   .byte $00 ; Row 13
 
+SonicWalking31
+  .byte %00000000 ; Row 1
+  .byte %00000010 ; Row 2
+  .byte %00010000 ; Row 3
+  .byte %00010100 ; Row 4
+  .byte %00010100 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00010000 ; Row 7
+  .byte %00011100 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00111110 ; Row 12
+  .byte %01100100 ; Row 13
+
+SonicWalking32
+  .byte %00000000 ; Row 1
+  .byte %00000100 ; Row 2
+  .byte %00100100 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00011010 ; Row 13
+
 SonicWalkingColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1208,6 +1431,36 @@ SonicWalkingColor32
   .byte $0E ; Row 11
   .byte $0E ; Row 12
   .byte $86 ; Row 13
+
+SonicWalking41
+  .byte %00000000 ; Row 1
+  .byte %00000100 ; Row 2
+  .byte %00010000 ; Row 3
+  .byte %00011000 ; Row 4
+  .byte %00011000 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00010000 ; Row 7
+  .byte %00011100 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00111110 ; Row 12
+  .byte %01100100 ; Row 13
+
+SonicWalking42
+  .byte %00000000 ; Row 1
+  .byte %00001000 ; Row 2
+  .byte %00001000 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00011010 ; Row 13
 
 SonicWalkingColor41
   .byte $88 ; Row 1
@@ -1273,157 +1526,6 @@ SonicRunning12
   .byte %00011010 ; Row 12
   .byte %00000000 ; Row 13
 
-SonicRunning21
-  .byte %00000000 ; Row 1
-  .byte %01000000 ; Row 2
-  .byte %10001001 ; Row 3
-  .byte %01100110 ; Row 4
-  .byte %00110010 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %01010010 ; Row 7
-  .byte %01111110 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00100100 ; Row 12
-  .byte %01111110 ; Row 13
-
-SonicRunning22
-  .byte %00000000 ; Row 1
-  .byte %00100110 ; Row 2
-  .byte %00010000 ; Row 3
-  .byte %00000000 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00011010 ; Row 12
-  .byte %00000000 ; Row 13
-
-SonicRunning31
-  .byte %00000000 ; Row 1
-  .byte %00000010 ; Row 2
-  .byte %10010001 ; Row 3
-  .byte %01100110 ; Row 4
-  .byte %00010100 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00110000 ; Row 7
-  .byte %00111100 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00100100 ; Row 12
-  .byte %01111110 ; Row 13
-
-SonicRunning32
-  .byte %00000000 ; Row 1
-  .byte %01100100 ; Row 2
-  .byte %00001000 ; Row 3
-  .byte %00000000 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00011010 ; Row 12
-  .byte %00000000 ; Row 13
-
-SonicRunning41
-  .byte %00000000 ; Row 1
-  .byte %00100110 ; Row 2
-  .byte %00010001 ; Row 3
-  .byte %01100010 ; Row 4
-  .byte %00001000 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00010000 ; Row 7
-  .byte %00011100 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00111110 ; Row 12
-  .byte %01100100 ; Row 13
-
-SonicRunning42
-  .byte %00000000 ; Row 1
-  .byte %01000000 ; Row 2
-  .byte %10001000 ; Row 3
-  .byte %00000100 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00000000 ; Row 12
-  .byte %00011010 ; Row 13
-
-SonicRunning51
-  .byte %00000000 ; Row 1
-  .byte %01100110 ; Row 2
-  .byte %00011001 ; Row 3
-  .byte %00100000 ; Row 4
-  .byte %00010100 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %00110010 ; Row 7
-  .byte %00111110 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00111110 ; Row 12
-  .byte %01100100 ; Row 13
-
-SonicRunning52
-  .byte %00000000 ; Row 1
-  .byte %00000000 ; Row 2
-  .byte %10000000 ; Row 3
-  .byte %01000110 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00000000 ; Row 12
-  .byte %00011010 ; Row 13
-
-SonicRunning61
-  .byte %00000000 ; Row 1
-  .byte %01100110 ; Row 2
-  .byte %10011000 ; Row 3
-  .byte %00000100 ; Row 4
-  .byte %00100001 ; Row 5
-  .byte %00010000 ; Row 6
-  .byte %01010011 ; Row 7
-  .byte %01111101 ; Row 8
-  .byte %00010000 ; Row 9
-  .byte %00110100 ; Row 10
-  .byte %01110100 ; Row 11
-  .byte %00111110 ; Row 12
-  .byte %01100100 ; Row 13
-
-SonicRunning62
-  .byte %00000000 ; Row 1
-  .byte %00000000 ; Row 2
-  .byte %00000001 ; Row 3
-  .byte %01100010 ; Row 4
-  .byte %00000000 ; Row 5
-  .byte %00001100 ; Row 6
-  .byte %00001100 ; Row 7
-  .byte %00000000 ; Row 8
-  .byte %00001110 ; Row 9
-  .byte %00001010 ; Row 10
-  .byte %00001010 ; Row 11
-  .byte %00000000 ; Row 12
-  .byte %00011010 ; Row 13
-
-;Running Color:
 SonicRunningColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1453,6 +1555,36 @@ SonicRunningColor12
   .byte $0E ; Row 11
   .byte $86 ; Row 12
   .byte $00 ; Row 13
+
+SonicRunning21
+  .byte %00000000 ; Row 1
+  .byte %01000000 ; Row 2
+  .byte %10001001 ; Row 3
+  .byte %01100110 ; Row 4
+  .byte %00110010 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %01010010 ; Row 7
+  .byte %01111110 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00100100 ; Row 12
+  .byte %01111110 ; Row 13
+
+SonicRunning22
+  .byte %00000000 ; Row 1
+  .byte %00100110 ; Row 2
+  .byte %00010000 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00011010 ; Row 12
+  .byte %00000000 ; Row 13
 
 SonicRunningColor21
   .byte $38 ; Row 1
@@ -1484,6 +1616,36 @@ SonicRunningColor22
   .byte $86 ; Row 12
   .byte $00 ; Row 13
 
+SonicRunning31
+  .byte %00000000 ; Row 1
+  .byte %00000010 ; Row 2
+  .byte %10010001 ; Row 3
+  .byte %01100110 ; Row 4
+  .byte %00010100 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00110000 ; Row 7
+  .byte %00111100 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00100100 ; Row 12
+  .byte %01111110 ; Row 13
+
+SonicRunning32
+  .byte %00000000 ; Row 1
+  .byte %01100100 ; Row 2
+  .byte %00001000 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00011010 ; Row 12
+  .byte %00000000 ; Row 13
+
 SonicRunningColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1513,6 +1675,36 @@ SonicRunningColor32
   .byte $0E ; Row 11
   .byte $86 ; Row 12
   .byte $00 ; Row 13
+
+SonicRunning41
+  .byte %00000000 ; Row 1
+  .byte %00100110 ; Row 2
+  .byte %00010001 ; Row 3
+  .byte %01100010 ; Row 4
+  .byte %00001000 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00010000 ; Row 7
+  .byte %00011100 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00111110 ; Row 12
+  .byte %01100100 ; Row 13
+
+SonicRunning42
+  .byte %00000000 ; Row 1
+  .byte %01000000 ; Row 2
+  .byte %10001000 ; Row 3
+  .byte %00000100 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00011010 ; Row 13
 
 SonicRunningColor41
   .byte $88 ; Row 1
@@ -1544,6 +1736,36 @@ SonicRunningColor42
   .byte $86 ; Row 12
   .byte $86 ; Row 13
 
+SonicRunning51
+  .byte %00000000 ; Row 1
+  .byte %01100110 ; Row 2
+  .byte %00011001 ; Row 3
+  .byte %00100000 ; Row 4
+  .byte %00010100 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %00110010 ; Row 7
+  .byte %00111110 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00111110 ; Row 12
+  .byte %01100100 ; Row 13
+
+SonicRunning52
+  .byte %00000000 ; Row 1
+  .byte %00000000 ; Row 2
+  .byte %10000000 ; Row 3
+  .byte %01000110 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00011010 ; Row 13
+
 SonicRunningColor51
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1573,6 +1795,36 @@ SonicRunningColor52
   .byte $0E ; Row 11
   .byte $86 ; Row 12
   .byte $86 ; Row 13
+
+SonicRunning61
+  .byte %00000000 ; Row 1
+  .byte %01100110 ; Row 2
+  .byte %10011000 ; Row 3
+  .byte %00000100 ; Row 4
+  .byte %00100001 ; Row 5
+  .byte %00010000 ; Row 6
+  .byte %01010011 ; Row 7
+  .byte %01111101 ; Row 8
+  .byte %00010000 ; Row 9
+  .byte %00110100 ; Row 10
+  .byte %01110100 ; Row 11
+  .byte %00111110 ; Row 12
+  .byte %01100100 ; Row 13
+
+SonicRunning62
+  .byte %00000000 ; Row 1
+  .byte %00000000 ; Row 2
+  .byte %00000001 ; Row 3
+  .byte %01100010 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00001100 ; Row 6
+  .byte %00001100 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00001110 ; Row 9
+  .byte %00001010 ; Row 10
+  .byte %00001010 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00011010 ; Row 13
 
 SonicRunningColor61
   .byte $88 ; Row 1
@@ -1638,7 +1890,6 @@ SonicBall12
   .byte %00000000 ; Row 12
   .byte %00000000 ; Row 13
 
-;Ball Color:
 SonicBallColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
@@ -1676,10 +1927,11 @@ BallSpeed:
 
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Epilogue
-
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Epilogue
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	org $fffc
         .word Start	; reset vector
         .word Start	; BRK vector
