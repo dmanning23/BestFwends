@@ -82,6 +82,18 @@ spritePtr2 .word
 spriteColorPtr1 .word
 spriteColorPtr2 .word
 
+;The timing of the current animation
+animationTiming .byte
+
+;The number of frames in the current animation
+numAnimationFrames .byte
+
+;The animation timer
+currentAnimationTime .byte
+
+;The current animation frame
+currentAnimationFrame .byte
+
 ;This variable is used to mask the controller input to map to p1 or p2
 controllerMask  .byte 
 
@@ -164,6 +176,14 @@ Start
     sta spriteColorPtr1+1
     sta spriteColorPtr2
     sta spriteColorPtr2+1
+
+    ;set all the animation variables
+    sta currentAnimationTime
+    sta currentAnimationFrame
+    lda #30
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
 
 NextFrame
     lsr SWCHB	; test Game Reset switch
@@ -774,6 +794,12 @@ UpdateRunningSprite
     lda #>SonicRunning11
     sta spritePtr1,x
 
+    ;set the animation variables
+    lda RunningSpeed
+    sta animationTiming
+    lda #6
+    sta numAnimationFrames
+
     jmp DoneUpdatingPlayerSprite
 
 UpdateWalkingSprite
@@ -784,6 +810,11 @@ UpdateWalkingSprite
     inx
     lda #>SonicWalking11
     sta spritePtr1,x
+
+    lda WalkingSpeed
+    sta animationTiming
+    lda #4
+    sta numAnimationFrames
 
     jmp DoneUpdatingPlayerSprite
 
@@ -797,6 +828,11 @@ UpdateBrakingSprite
     lda #>SonicBall11
     sta spritePtr1,x
 
+    lda #1
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
+
     jmp DoneUpdatingPlayerSprite
 
 UpdateRollingSprite
@@ -808,6 +844,11 @@ UpdateRollingSprite
     inx
     lda #>SonicBall11
     sta spritePtr1,x
+
+    lda #1
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
 
     jmp DoneUpdatingPlayerSprite
 
@@ -821,6 +862,11 @@ UpdateStunnedSprite
     lda #>SonicBall11
     sta spritePtr1,x
 
+    lda #1
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
+
     jmp DoneUpdatingPlayerSprite
 
 UpdateStandingSprite
@@ -832,9 +878,77 @@ UpdateStandingSprite
     lda #>SonicStanding11
     sta spritePtr1,x
 
+    lda StandingSpeed
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
+
     jmp DoneUpdatingPlayerSprite
 
 DoneUpdatingPlayerSprite
+
+UpdateAnimation subroutine
+
+    ;don't update the animation if the number of frames is less than 1
+    lda numAnimationFrames     ; Load number of frames
+    cmp #2                     ; Compare with 2
+    bcs .continue               ; Branch if numAnimationFrames >= 2
+    jmp .doneUpdatingAnimation ; Skip if numAnimationFrames <= 1
+
+.continue:
+
+    ;Update the animation time 
+
+    ;Increment the current animation time
+    inc currentAnimationTime
+
+    ;Check if it is time to increment the frame
+    lda currentAnimationTime ; Load currentAnimationTime into accumulator
+    cmp animationTiming ; Compare with animationTiming
+    bcc .doneUpdatingAnimationTime ; Branch if currentAnimationTime < animationTiming
+
+    ; If we get here, currentAnimationTime >= animationTiming
+    lda #0                     ; Load 0 into accumulator
+    sta currentAnimationTime   ; Reset currentAnimationTime to 0
+    inc currentAnimationFrame  ; Increment the animation frame
+
+.doneUpdatingAnimationTime
+
+    ;Update the animation frame
+
+    lda currentAnimationFrame ; Load current frame into accumulator
+    cmp numAnimationFrames ; Compare with max frames
+    ;beq .doneUpdatingAnimationFrame ; If equal, we're good
+    bcc .doneUpdatingAnimationFrame ; Branch if currentAnimationFrame < numAnimationFrames
+
+    ; If we get here, currentAnimationFrame >= numAnimationFrames
+    lda #0 ; Load 0 into accumulator
+    sta currentAnimationFrame ; Reset frame back to 0
+
+.doneUpdatingAnimationFrame:
+
+    ;Move the sprite pointer to point to the correct animation frame
+
+    lda currentAnimationFrame  ; Check if frame is 0
+    beq .doneUpdatingSpritePointer                  ; If 0, no adding needed
+
+    ldx currentAnimationFrame ; Use X as our counter
+    
+.addLoop:
+    clc                       ; Clear carry before addition
+    lda spritePtr1           ; Add 52 to pointer
+    adc #52
+    sta spritePtr1
+    lda spritePtr1+1         ; Add carry to high byte
+    adc #0
+    sta spritePtr1+1
+    
+    dex                      ; Decrement counter
+    bne .addLoop             ; Keep going if we're not done
+
+.doneUpdatingSpritePointer
+
+.doneUpdatingAnimation
 
     ;set up rest of the player sprites
 
@@ -1574,7 +1688,7 @@ SonicWalkingColor42
   .byte $86 ; Row 13
 
 WalkingSpeed:
-  .byte 7 ; Animation speed
+  .byte 3 ; Animation speed
 
 ;Running Animation Data:
 SonicRunning11
@@ -1938,7 +2052,7 @@ SonicRunningColor62
   .byte $86 ; Row 13
 
 RunningSpeed:
-  .byte 4 ; Animation speed
+  .byte 1 ; Animation speed
 
 ;Ball Animation Data:
 SonicBall11
