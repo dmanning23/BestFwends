@@ -820,17 +820,16 @@ UpdateWalkingSprite
 
 UpdateBrakingSprite
 
-    ;TODO: braking animation
     ldx #0
-    lda #<SonicBall11
+    lda #<SonicBraking11
     sta spritePtr1,x
     inx
-    lda #>SonicBall11
+    lda #>SonicBraking11
     sta spritePtr1,x
 
-    lda #1
+    lda BrakingSpeed
     sta animationTiming
-    lda #1
+    lda #3
     sta numAnimationFrames
 
     jmp DoneUpdatingPlayerSprite
@@ -2076,8 +2075,8 @@ SonicBall12
   .byte %00000000 ; Row 3
   .byte %00000000 ; Row 4
   .byte %00000000 ; Row 5
-  .byte %00000000 ; Row 6
-  .byte %00000000 ; Row 7
+  .byte %00110000 ; Row 6
+  .byte %00110000 ; Row 7
   .byte %00000000 ; Row 8
   .byte %00000000 ; Row 9
   .byte %00000000 ; Row 10
@@ -2087,7 +2086,7 @@ SonicBall12
 
 SonicBallColor11
   .byte $88 ; Row 1
-  .byte $38 ; Row 2
+  .byte $88 ; Row 2
   .byte $88 ; Row 3
   .byte $88 ; Row 4
   .byte $88 ; Row 5
@@ -2106,8 +2105,8 @@ SonicBallColor12
   .byte $38 ; Row 3
   .byte $88 ; Row 4
   .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
+  .byte $0E ; Row 6
+  .byte $0E ; Row 7
   .byte $FC ; Row 8
   .byte $1C ; Row 9
   .byte $C8 ; Row 10
@@ -2117,6 +2116,192 @@ SonicBallColor12
 
 BallSpeed:
   .byte 30 ; Animation speed
+
+;Braking Animation Data:
+SonicBraking11
+  .byte %00000000 ; Row 1
+  .byte %00000100 ; Row 2
+  .byte %00010010 ; Row 3
+  .byte %00001010 ; Row 4
+  .byte %00000101 ; Row 5
+  .byte %00000001 ; Row 6
+  .byte %00000001 ; Row 7
+  .byte %00000111 ; Row 8
+  .byte %00001000 ; Row 9
+  .byte %00011010 ; Row 10
+  .byte %00111010 ; Row 11
+  .byte %00011111 ; Row 12
+  .byte %00110010 ; Row 13
+
+SonicBraking12
+  .byte %00000000 ; Row 1
+  .byte %01100010 ; Row 2
+  .byte %00001000 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00000110 ; Row 6
+  .byte %00000110 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00000111 ; Row 9
+  .byte %00000101 ; Row 10
+  .byte %00000101 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00001101 ; Row 13
+
+SonicBrakingColor11
+  .byte $88 ; Row 1
+  .byte $38 ; Row 2
+  .byte $38 ; Row 3
+  .byte $88 ; Row 4
+  .byte $88 ; Row 5
+  .byte $88 ; Row 6
+  .byte $88 ; Row 7
+  .byte $88 ; Row 8
+  .byte $88 ; Row 9
+  .byte $88 ; Row 10
+  .byte $88 ; Row 11
+  .byte $88 ; Row 12
+  .byte $88 ; Row 13
+
+SonicBrakingColor12
+  .byte $38 ; Row 1
+  .byte $0E ; Row 2
+  .byte $0E ; Row 3
+  .byte $0E ; Row 4
+  .byte $FC ; Row 5
+  .byte $FC ; Row 6
+  .byte $FC ; Row 7
+  .byte $FC ; Row 8
+  .byte $1C ; Row 9
+  .byte $C8 ; Row 10
+  .byte $0E ; Row 11
+  .byte $86 ; Row 12
+  .byte $86 ; Row 13
+
+SonicBraking21
+  .byte %00000000 ; Row 1
+  .byte %00000100 ; Row 2
+  .byte %00010010 ; Row 3
+  .byte %00001010 ; Row 4
+  .byte %00000101 ; Row 5
+  .byte %00000001 ; Row 6
+  .byte %00000001 ; Row 7
+  .byte %00000111 ; Row 8
+  .byte %00001000 ; Row 9
+  .byte %00011010 ; Row 10
+  .byte %00111010 ; Row 11
+  .byte %00011111 ; Row 12
+  .byte %00110010 ; Row 13
+
+SonicBraking22
+  .byte %00000000 ; Row 1
+  .byte %00000010 ; Row 2
+  .byte %11001000 ; Row 3
+  .byte %00000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00000110 ; Row 6
+  .byte %00000110 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00000111 ; Row 9
+  .byte %00000101 ; Row 10
+  .byte %00000101 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00001101 ; Row 13
+
+SonicBrakingColor21
+  .byte $88 ; Row 1
+  .byte $38 ; Row 2
+  .byte $38 ; Row 3
+  .byte $88 ; Row 4
+  .byte $88 ; Row 5
+  .byte $88 ; Row 6
+  .byte $88 ; Row 7
+  .byte $88 ; Row 8
+  .byte $88 ; Row 9
+  .byte $88 ; Row 10
+  .byte $88 ; Row 11
+  .byte $88 ; Row 12
+  .byte $88 ; Row 13
+
+SonicBrakingColor22
+  .byte $38 ; Row 1
+  .byte $0E ; Row 2
+  .byte $0E ; Row 3
+  .byte $0E ; Row 4
+  .byte $FC ; Row 5
+  .byte $FC ; Row 6
+  .byte $FC ; Row 7
+  .byte $FC ; Row 8
+  .byte $1C ; Row 9
+  .byte $C8 ; Row 10
+  .byte $0E ; Row 11
+  .byte $86 ; Row 12
+  .byte $86 ; Row 13
+
+SonicBraking31
+  .byte %00000000 ; Row 1
+  .byte %00000100 ; Row 2
+  .byte %00010010 ; Row 3
+  .byte %00001010 ; Row 4
+  .byte %00000101 ; Row 5
+  .byte %00000001 ; Row 6
+  .byte %00000001 ; Row 7
+  .byte %00000111 ; Row 8
+  .byte %00001000 ; Row 9
+  .byte %00011010 ; Row 10
+  .byte %00111010 ; Row 11
+  .byte %00011111 ; Row 12
+  .byte %00110010 ; Row 13
+
+SonicBraking32
+  .byte %00000000 ; Row 1
+  .byte %00011010 ; Row 2
+  .byte %00001000 ; Row 3
+  .byte %10000000 ; Row 4
+  .byte %00000000 ; Row 5
+  .byte %00000110 ; Row 6
+  .byte %00000110 ; Row 7
+  .byte %00000000 ; Row 8
+  .byte %00000111 ; Row 9
+  .byte %00000101 ; Row 10
+  .byte %00000101 ; Row 11
+  .byte %00000000 ; Row 12
+  .byte %00001101 ; Row 13
+
+SonicBrakingColor31
+  .byte $88 ; Row 1
+  .byte $38 ; Row 2
+  .byte $38 ; Row 3
+  .byte $88 ; Row 4
+  .byte $88 ; Row 5
+  .byte $88 ; Row 6
+  .byte $88 ; Row 7
+  .byte $88 ; Row 8
+  .byte $88 ; Row 9
+  .byte $88 ; Row 10
+  .byte $88 ; Row 11
+  .byte $88 ; Row 12
+  .byte $88 ; Row 13
+
+SonicBrakingColor32
+  .byte $38 ; Row 1
+  .byte $0E ; Row 2
+  .byte $0E ; Row 3
+  .byte $0E ; Row 4
+  .byte $FC ; Row 5
+  .byte $FC ; Row 6
+  .byte $FC ; Row 7
+  .byte $FC ; Row 8
+  .byte $1C ; Row 9
+  .byte $C8 ; Row 10
+  .byte $0E ; Row 11
+  .byte $86 ; Row 12
+  .byte $86 ; Row 13
+
+BrakingSpeed:
+  .byte 1 ; Animation speed
+
+
 
 
 
