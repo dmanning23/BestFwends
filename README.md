@@ -1,20 +1,21 @@
 # Sonic & Tails: Best Fwends
+# aka Best Fwends (if you work for Sega or are a narc)
 ## A best buddies adventure for the Atari 2600
 
 This is still a work-in-progress!!!
 
 Play it in your browser:
 
-https://javatari.org?ROM=https://github.com/dmanning23/BookOfFiveRings/releases/download/1.0/BookOfFiveRings.bin
+https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin
 
-[![Play Book of Five Rings in your browser](BookOfFiveRings-main.jpg)](https://javatari.org?ROM=https://github.com/dmanning23/BookOfFiveRings/releases/download/1.0/BookOfFiveRings.bin)
+[![Play Sonic & Tails: Best Fwends in your browser](BookOfFiveRings-main.jpg)](https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin)
 
 Check the Releases page for the latest version:
 https://github.com/dmanning23/BestFwends/releases
 
 ### How to play
 
-Collect the more rings than your opponent.
+Collect more rings than your opponent.
 Spin dash to knock their rings off!
 
 ### Controls
@@ -27,4 +28,4 @@ Spin dash to knock their rings off!
 | Down      | Move up NO I mean move down |
 | Button | Spin dash |
 
-[![Play Sonic & Tails: Best Fwends in your browser](Screenshot.png)](https://javatari.org?ROM=https://github.com/dmanning23/MountFuji2600/blob/main/BookOfFiveRings.bin)
+[![Play Sonic & Tails: Best Fwends in your browser](Screenshot.png)](https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin)
