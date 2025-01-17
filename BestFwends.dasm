@@ -71,9 +71,6 @@ StunnedState    equ #05
 Player1Braking .byte
 Player2Braking .byte
 
-;This is a counter used to update the player sprites
-spriteCounter .byte
-
 ;This points at the current sprite being drawn
 spritePtr1 .word
 spritePtr2 .word
@@ -99,8 +96,19 @@ controllerMask  .byte
 
 counter .byte
 
-;This is used in the draw routine
-localCoordinate .byte
+;Ring variables
+ringX .byte      ; X position of ring
+ringY .byte      ; Y position of ring
+ringY1 .byte
+ringColor equ #$1A
+
+;Random number seeds
+RandomSeed .byte
+
+;scratch variable
+Temp .byte
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -119,13 +127,31 @@ Start
     sta NUSIZ0
     sta NUSIZ1
 
-    lda #0
-    sta REFP0
-    sta REFP1
-    sta RESP0
-    sta RESP1
-    sta HMP0
-    sta HMP1
+    ;set the background art
+    lda #%00000000
+    sta PF0
+    sta PF1
+    sta PF2
+
+    ;set the background color
+    ;lda #$0E
+    lda #$01
+    sta COLUBK
+    ;sta COLUPF
+
+    lda #%00010101 ; make missiles 2x-wide and set player sprites to double
+    ;lda #%00011111 ; make missiles 2x-wide and set player sprites to quad
+     ;lda #$20 ; make missiles 4x-wide
+    sta NUSIZ0
+    sta NUSIZ1
+
+    ;lda #%00110000 ;set ball 8x-wide
+    lda #%00100000 ;set ball 4x-wide
+    sta CTRLPF
+
+    ;set the ball color
+    lda ringColor
+    sta COLUPF
 
     ;set both players to the center horizontally
     lda #72
@@ -168,8 +194,6 @@ Start
     ;reset the counters
     lda #0
     sta counter
-    sta spriteCounter
-    sta localCoordinate
 
     ;reset the pointers
     sta spritePtr1
@@ -189,9 +213,27 @@ Start
     lda #1
     sta numAnimationFrames
 
-NextFrame
+    ; seed the random number generator
+    lda INTIM       ; unknown value
+    sta RandomSeed       ; use as seed
+    
+    lda #0 
+    sta Temp
+
+    ;set the initial ring position
+    jsr RandomizeRingPosition
+
+NextFrame subroutine
+
     lsr SWCHB	; test Game Reset switch
-    bcc Start	; reset?
+    bcc .reset	; reset?
+
+    jmp .continue ;don't reset
+
+.reset
+    jmp Start
+
+.continue
 
     ; 1 + 3 lines of VSYNC
     VERTICAL_SYNC
@@ -203,6 +245,8 @@ NextFrame
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     TIMER_SETUP 35
+    
+    jsr Random
     
     lda #0
     sta RESP0
@@ -1085,7 +1129,7 @@ UpdateAnimation subroutine
     ;set up rest of the player sprites
 
     ;Set the second player sprite
-    ldx spriteCounter
+    ldx #0
     lda spritePtr1,x        ; Load the low byte value
     clc                     ; Clear carry before addition
     adc #13                 ; Add 13 to the value
@@ -1096,7 +1140,7 @@ UpdateAnimation subroutine
     sta spritePtr2,x
 
     ;Set the player color
-    ldx spriteCounter
+    ldx #0
     lda spritePtr1,x        ; Load the low byte value
     clc                     ; Clear carry before addition
     adc #26                 ; Point at the color frame
@@ -1107,7 +1151,7 @@ UpdateAnimation subroutine
     sta spriteColorPtr1,x
 
     ;Set the second player color
-    ldx spriteCounter
+    ldx #0
     lda spritePtr1,x        ; Load the low byte value
     clc                     ; Clear carry before addition
     adc #39                 ; Point at the color frame
@@ -1169,6 +1213,11 @@ UpdatePosition subroutine
     jsr SetHorizPos
     lda XPos1,y
     ldx #1
+    jsr SetHorizPos
+    
+    ;Set the ring position
+    lda ringX
+    ldx #4
     jsr SetHorizPos
 
     sta WSYNC	; sync w/ scanline
@@ -1255,7 +1304,7 @@ UpdatePosition subroutine
 .DoneClampingVerticalOverflow
 
 .DoneAddingVerticalVelocityToPosition
-
+    
     TIMER_WAIT
 
 
@@ -1273,20 +1322,20 @@ UpdatePosition subroutine
 
     ;load the Tails coordinate
     lda YPos2
-    sta localCoordinate
+    sta Temp
     jmp DrawPlayer
 
 DrawP1
     ;load the sonic coordinate
     lda YPos1
-    sta localCoordinate
+    sta Temp
 
 DrawPlayer subroutine
     ldx #192	; X = 192 scanlines
 .LVScan
     txa		; X -> A
     sec		; set carry for subtract
-    sbc localCoordinate	; local coordinate
+    sbc Temp	; local coordinate
     cmp #SpriteHeight ; in sprite?
     bcc .InSprite	; yes, skip over next
     lda #0		; not in sprite, load 0
@@ -1306,7 +1355,34 @@ DrawPlayer subroutine
     lda (spriteColorPtr2),y ; lookup color
     sta COLUP1	; store color
 
+    ;Skip to the next line and draw the ring
+    sta WSYNC
+    
+    ;Are we drawing the ring?
+    txa
+    cmp ringY1
+    bcc .drawRingBottom
+
+    jmp .SkipRing
+    
+.drawRingBottom
+
+    ;draw the ball
+    cmp ringY
+    bcc .SkipRing
+    lda #02
+    sta ENABL
+
+    jmp .DoneRing
+
+.SkipRing
+    lda #00
+    sta ENABL
+   
+.DoneRing
+
     dex		; decrement X
+    dex
     bne .LVScan	; repeat until 192 lines
 
 
@@ -1333,24 +1409,83 @@ OverScan
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; SetHorizPos routine
-    ; A = X coordinate
-    ; X = player number (0 or 1)
+    ; A = X coordinate of the object
+    ; X = index of the desired object:
+    ;  0: player 1
+    ;  1: player 2
+    ;  2: missile 1
+    ;  3: missile 2
+    ;  4: ball
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 SetHorizPos subroutine
-	sta WSYNC	; start a new line
-	sec		; set carry flag
+    sta WSYNC ; start a new line
+    sec ; set carry flag
 .DivideLoop
-	sbc #15		; subtract 15
-	bcs .DivideLoop	; branch until negative
-	eor #7		; calculate fine offset
-	asl
-	asl
-	asl
-	asl
-	sta RESP0,x	; fix coarse position
-	sta HMP0,x	; set fine offset
-	rts		; return to caller
+    sbc #15 ; subtract 15
+    bcs .DivideLoop ; branch until negative
+    eor #7 ; calculate fine offset
+    asl
+    asl
+    asl
+    asl
+    sta RESP0,x ; fix coarse position
+    sta HMP0,x ; set fine offset
+    rts ; return to caller
+
+
+
+Random subroutine
+    lda RandomSeed
+    lsr
+    bcc .noeor
+    eor #$D4 
+.noeor 
+    sta RandomSeed
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Generate random X and Y coordinates for the ring
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RandomizeRingPosition:
+    jsr Random      ; get a random value between 0-255
+    and #158        ; limit range to 0-127
+    ;sta Temp        ; save it
+    ;jsr Random      ; get a random value between 0-255
+    ;and #31         ; limit range to 0-31
+    ;clc             ; must clear carry for add
+    ;adc Temp        ; add in random # from 0-127 for range of 0-142
+    adc #6          ; add 5 for range of 5-147
+
+    ;lda #164
+    sta ringX   ; save the random X position
+    
+    jsr Random      ; get a random value between 0-255
+    and #183        ; limit range to 0-127
+    ;sta Temp        ; save it
+    ;jsr Random      ; get a random value between 0-255
+    ;and #56         ; limit range to 0-15
+    ;clc             ; must clear carry for add
+    ;adc Temp        ; add in random # from 0-127 for range of 0-142
+    adc #3         ; add 26 for range of 26-168
+
+    ;lda #64
+    sta ringY   ; save the random Y position
+    adc #8
+    sta ringY1
+    
+    ;ring range:
+    ;horizontal:
+    ;6-164
+    ;vertical:
+    ;3-186
+
+    rts
+
 
 
 
