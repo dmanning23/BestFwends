@@ -8,7 +8,7 @@ Play it in your browser:
 
 https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin
 
-[![Play Sonic & Tails: Best Fwends in your browser](BookOfFiveRings-main.jpg)](https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin)
+[![Play Sonic & Tails: Best Fwends in your browser](BestFwends-main.jpg)](https://javatari.org?ROM=https://github.com/dmanning23/BestFwends/releases/download/v0.1/BestFwends.bin)
 
 Check the Releases page for the latest version:
 https://github.com/dmanning23/BestFwends/releases
