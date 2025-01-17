@@ -71,6 +71,10 @@ StunnedState    equ #05
 Player1Braking .byte
 Player2Braking .byte
 
+;Timer used for the stunned state
+Player1StunnedTimer .byte
+Player2StunnedTimer .byte
+
 ;This points at the current sprite being drawn
 spritePtr1 .word
 spritePtr2 .word
@@ -183,6 +187,10 @@ Start
     sta Player1Braking
     sta Player2Braking
 
+    ;set the stunned timers
+    sta Player1StunnedTimer
+    sta Player2StunnedTimer
+
     ;make both players face right and move in the correct directions
     lda #1
     sta FaceRight1
@@ -292,9 +300,53 @@ SetP1ControllerMask subroutine
 
 UpdatePlayer
 
+IsRollingOrStunned subroutine
+
     ;Set the player's braking flag to "not braking"
     lda #0
     sta Player1Braking,y
+
+    ;if the player is rolling, skip to the Rolling section
+    lda PlayerState1,y
+    cmp RollingState
+    beq .rolling
+
+    ;if the player is stunned, skip to the Stunned section
+    cmp StunnedState
+    beq .stunned
+
+    jmp .dontSkip
+
+.rolling
+
+    ;slow the player down a little bit
+
+    ;slow down the x velocity
+    lda XVel1,y ;Load the velocity
+    beq .skipXDecel ;If XVel1 = 0, skip deceleration
+    sec ;Set carry flag
+    sbc #1 ;Subtract 1
+    sta XVel1,y ;Store the result back
+
+.skipXDecel
+
+    ;slow down the y velocity
+    lda YVel1,y ;Load the velocity
+    beq .skipYDecel ;If XVel1 = 0, skip deceleration
+    sec ;Set carry flag
+    sbc #1 ;Subtract 1
+    sta YVel1,y ;Store the result back
+
+.skipYDecel
+
+    jmp DoneUpdatingPlayerState
+
+.stunned
+    
+    ;TODO: move the decel logic into here
+    jmp DoneUpdatingPlayerState
+
+.dontSkip
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -796,6 +848,19 @@ CheckYWalking subroutine
 
 DoneUpdatingPlayerState
 
+
+
+
+;TODO: check collision with other player
+
+;TODO: check collision with ring
+
+
+
+
+   
+
+
 ;Skip all the way down here if we aren't updating the player this frame
 DoneUpdatePlayer
 
@@ -807,7 +872,174 @@ DoneUpdatePlayer
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; TODO: set the player sprite
+    ; Run the player logic
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunPlayerLogic subroutine
+    lda PlayerState1,y
+    cmp RunningState
+    beq .checkButton
+
+    ;The player is not running
+
+    ;check if the player is rolling
+    cmp RollingState
+    beq .isRunningSpeed
+
+    ;The player is not running or rolling
+
+    ;check if the player is stunned
+    cmp StunnedState
+    beq .decrementStunnedTimer
+
+    ;If it gets here, there is no player logic to process
+    jmp .doneRunningPlayerLogic
+
+.checkButton
+
+    ;TODO: check if the player is pressing the button
+
+    ;which player are we checking?
+    tya
+    beq .checkP1Button
+
+    ;check the p2 button
+    bit INPT5
+    bmi .noButton
+    jmp .setRollingState
+
+.checkP1Button
+
+    ;check the p1 button
+    bit INPT4
+    bmi .noButton
+    jmp .setRollingState
+
+.decrementStunnedTimer
+
+    ;Check if the player is still stunned
+
+    ;decrement the stunned timer
+    lda Player1StunnedTimer,y
+    beq .setStandingState
+    sec ;Set carry flag
+    sbc #1 ;Subtract 1
+    sta Player1StunnedTimer,y ;Store the result back
+
+    ;Slow the player down drastically
+
+    ;Check if the player is moving faster than 2
+    lda XVel1,y
+    cmp #3
+    bcc .dontBrakeX
+
+    ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
+    lda XVel1,y     ;Load the current velocity
+    sec             ;Set carry flag before subtraction
+    sbc #2          ;Subtract 2
+    sta XVel1,y     ;Store it back to memory
+    
+    ;done updating the player's horizontal velocity
+    jmp .doneCheckX
+
+.dontBrakeX
+
+    ;Since the player is walking (moving less than 2), set their velocity to 0
+    lda #0
+    sta XVel1,y
+
+.doneCheckX
+
+    ;Check if the player is moving faster than 2
+    lda YVel1,y
+    cmp #3
+    bcc .dontBrakeY
+
+    ;Since the player is moving faster than 2, subtract 2 to slow them down drastically
+    lda YVel1,y     ;Load the current velocity
+    sec             ;Set carry flag before subtraction
+    sbc #2          ;Subtract 2
+    sta YVel1,y     ;Store it back to memory
+    
+    ;done updating the player's vertical velocity
+    jmp .doneCheckY
+
+.dontBrakeY
+
+    ;Since the player is walking (moving less than 2), set their velocity to 0
+    lda #0
+    sta YVel1,y
+
+.doneCheckY
+
+    ;done updating the player's vertical velocity
+    jmp .doneRunningPlayerLogic
+
+.noButton
+
+    ;the player isn't pressing the button
+    jmp .doneRunningPlayerLogic
+
+.setRollingState
+
+    ;set the player to "rolling"
+    lda RollingState
+    sta PlayerState1,y
+
+    ;double the player's speed
+    lda XVel1,y
+    asl
+    sta XVel1,y
+    lda YVel1,y
+    asl
+    sta YVel1,y
+
+    jmp .doneRunningPlayerLogic
+
+.isRunningSpeed
+
+    ;check if the player's speed has slowed down to walking speed
+    ;check if the player's vertial velocity is over the threshold for "running"
+    lda XVel1,y
+    cmp RunningThreshold
+    bcs .IsRunning
+
+    lda YVel1,y
+    cmp RunningThreshold
+    bcs .IsRunning
+
+    ;The player has slowed down to walking speed
+    lda WalkingState
+    sta PlayerState1,y
+
+    jmp .doneRunningPlayerLogic
+
+.IsRunning:
+
+    ;The player is still rolling
+    jmp .doneRunningPlayerLogic
+
+.setStandingState
+
+    ;set the player state to "standing"
+    lda StandingState
+    sta PlayerState1,y
+
+    jmp .doneRunningPlayerLogic
+
+.doneRunningPlayerLogic
+
+
+
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; set the player sprite
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
