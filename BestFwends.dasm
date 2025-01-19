@@ -892,7 +892,7 @@ DoneUpdatingPlayerState
 
 
 
-;TODO: check collision with ring
+
 
 
 
@@ -1033,8 +1033,13 @@ PlayerCollisionLogic subroutine
 
 .collision
 
+    ;TODO: so much collision logic
+
 .done
 
+
+
+;TODO: check collision with ring
 
 
 
@@ -1077,8 +1082,6 @@ UpdateRunningSprite subroutine
     ;are we setting sonic or tails?
     cpy #0
     beq .sonic
-
-    ;TODO: running animation
 
     ;Set the first player sprite to the Tails animation
     ldx #0
@@ -1154,7 +1157,6 @@ UpdateBrakingSprite subroutine
     cpy #0
     beq .sonic
 
-    ;TODO: braking animation
     ldx #0
     lda #<TailsBraking11
     sta spritePtr1,x
@@ -1190,7 +1192,6 @@ UpdateRollingSprite subroutine
     cpy #0
     beq .sonic
 
-    ;TODO: rolling animation
     ldx #0
     lda #<TailsBall11
     sta spritePtr1,x
@@ -1207,7 +1208,6 @@ UpdateRollingSprite subroutine
 
 .sonic
 
-    ;TODO: rolling animation
     ldx #0
     lda #<SonicBall11
     sta spritePtr1,x
@@ -1227,34 +1227,32 @@ UpdateStunnedSprite subroutine
     cpy #0
     beq .sonic
 
-    ;TODO: stunned animation
     ldx #0
-    lda #<TailsBall11
+    lda #<TailsStunned11
     sta spritePtr1,x
     inx
-    lda #>TailsBall11
+    lda #>TailsStunned11
     sta spritePtr1,x
 
-    lda #1
+    lda TailsStunnedSpeed
     sta animationTiming
-    lda #1
+    lda TailsStunnedFrames
     sta numAnimationFrames
 
     jmp DoneUpdatingPlayerSprite
 
 .sonic
 
-    ;TODO: stunned animation
     ldx #0
-    lda #<SonicBall11
+    lda #<SonicStunned11
     sta spritePtr1,x
     inx
-    lda #>SonicBall11
+    lda #>SonicStunned11
     sta spritePtr1,x
 
-    lda #1
+    lda SonicStunnedSpeed
     sta animationTiming
-    lda #1
+    lda SonicStunnedFrames
     sta numAnimationFrames
 
     jmp DoneUpdatingPlayerSprite
