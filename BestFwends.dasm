@@ -890,7 +890,7 @@ DoneUpdatingPlayerState
 
 
 
-;TODO: check collision with other player
+
 
 ;TODO: check collision with ring
 
@@ -1025,7 +1025,15 @@ RunPlayerLogic subroutine
 
 
 
+;TODO: check collision with other player
+PlayerCollisionLogic subroutine
+    jsr CheckCharCollision
+    bne .collision
+    jmp .done
 
+.collision
+
+.done
 
 
 
@@ -1711,6 +1719,84 @@ RandomizeRingPosition:
 
     rts
 
+
+
+CheckCharCollision subroutine
+    ; Check if |XPos1 - XPos2| < width(8)
+    sec
+    lda XPos1
+    sbc XPos2
+    bcs .skip1      ; If positive, skip negation
+    eor #$FF        ; Negate
+    adc #1
+.skip1:
+    cmp #12          ; width is immediate value
+    bcs .noCollision
+
+    ; Check if |YPos1 - YPos2| < height(12)
+    sec
+    lda YPos1
+    sbc YPos2
+    bcs .skip2      ; If positive, skip negation
+    eor #$FF        ; Negate
+    adc #1
+.skip2:
+    cmp #24         ; height is immediate value
+    BCS .noCollision
+
+    ; If we get here, there is a collision
+    lda #1
+    rts
+
+.noCollision:
+    lda #0
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Player 1 got bumped by player 2
+    ; Knock the first player around a bit
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+BumpP1 subroutine
+    lda XDirRight2
+    sta YDirDown1
+
+    lda XVel2
+    sta YVel1
+
+    lda YDirDown2
+    sta XDirRight1
+
+    lda YVel2
+    sta XVel1
+
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Player 2 got bumped by player 1
+    ; Knock the second player around a bit
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+BumpP2 subroutine
+    lda XDirRight1
+    sta YDirDown2
+
+    lda XVel1
+    sta YVel2
+
+    lda YDirDown1
+    sta XDirRight2
+
+    lda YVel1
+    sta XVel2
+
+    rts
 
 
 
