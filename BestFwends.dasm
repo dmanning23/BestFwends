@@ -75,6 +75,8 @@ Player2Braking .byte
 Player1StunnedTimer .byte
 Player2StunnedTimer .byte
 
+StunAmountTime equ #96
+
 ;This points at the current sprite being drawn
 spritePtr1 .word
 spritePtr2 .word
@@ -388,6 +390,9 @@ IsRollingOrStunned subroutine
     sta YVel1,y
 
 .doneCheckY
+
+    ;Once the stunned player has been slowed down, we are done updating them
+    jmp DoneUpdatingPlayerState
 
 .dontSkip
 
@@ -1025,7 +1030,11 @@ RunPlayerLogic subroutine
 
 
 
-;TODO: check collision with other player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Check if the players are colliding and run the player collision logic
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PlayerCollisionLogic subroutine
     jsr CheckCharCollision
     bne .collision
@@ -1033,7 +1042,72 @@ PlayerCollisionLogic subroutine
 
 .collision
 
-    ;TODO: so much collision logic
+    ;so much collision logic
+
+    ;check if p1 is spinning
+    lda PlayerState1
+    cmp RollingState
+    beq .p1IsSpinning
+
+    ;player 1 is not spinning
+    lda PlayerState2
+    cmp RollingState
+    beq .p2IsSpinning
+
+    ;neither player is spinning, nothing else to check
+    jmp .done
+
+.p1IsSpinning
+
+    ;p1 is spinning
+
+    ;Check if p2 is spinning
+    lda PlayerState2
+    cmp RollingState
+    beq .clash
+
+    ;Is player 2 stunned?
+    cmp StunnedState
+    beq .done
+
+    ; player 2 is getting bumped
+    ;Set the state to stunned
+    lda StunnedState
+    sta PlayerState2
+
+    ;Start the stun timer
+    lda StunAmountTime
+    sta Player2StunnedTimer
+
+    ;Perform the bump logic on their velocity
+    jsr BumpP2
+    jmp .done
+
+.p2IsSpinning
+
+    ;Player 1 not spinning, but player 2 is spinning
+
+    ;Is player 1 stunned?
+    lda PlayerState1
+    cmp StunnedState
+    beq .done
+
+    ; player 1 is getting bumped
+    ;Set the state to stunned
+    lda StunnedState
+    sta PlayerState1
+
+    ;Start the stun timer
+    lda StunAmountTime
+    sta Player1StunnedTimer
+
+    ;Perform the bump logic on their velocity
+    jsr BumpP1
+    jmp .done
+
+.clash
+
+    ;TODO: both players are spinning, perform the clash maneuver
 
 .done
 
@@ -2868,7 +2942,7 @@ TailsStunnedColor22
   .byte $2A ; Row 13
 
 TailsStunnedSpeed:
-  .byte 9 ; Animation speed
+  .byte 4 ; Animation speed
 
 TailsStunnedFrames:
   .byte 2 ; Number of frames
