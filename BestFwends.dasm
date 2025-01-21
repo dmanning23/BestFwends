@@ -1107,7 +1107,8 @@ PlayerCollisionLogic subroutine
 
 .clash
 
-    ;TODO: both players are spinning, perform the clash maneuver
+    ;both players are spinning, perform the clash maneuver
+    jsr CrashPlayers
 
 .done
 
@@ -1836,11 +1837,11 @@ BumpP1 subroutine
     lda XDirRight2
     sta YDirDown1
 
-    lda XVel2
-    sta YVel1
-
     lda YDirDown2
     sta XDirRight1
+
+    lda XVel2
+    sta YVel1
 
     lda YVel2
     sta XVel1
@@ -1859,14 +1860,58 @@ BumpP2 subroutine
     lda XDirRight1
     sta YDirDown2
 
-    lda XVel1
-    sta YVel2
-
     lda YDirDown1
     sta XDirRight2
 
+    lda XVel1
+    sta YVel2
+
     lda YVel1
     sta XVel2
+
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; The players are spinning and crashed into each other
+    ; Bounce them like billiard balls
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CrashPlayers subroutine
+
+    ;Swap the horizontal directions
+    lda XDirRight1
+    sta Temp
+    lda XDirRight2
+    sta XDirRight1
+    lda Temp
+    sta XDirRight2
+
+    ;swap vertical directions
+    lda YDirDown1
+    sta Temp
+    lda YDirDown2
+    sta YDirDown1
+    lda Temp
+    sta YDirDown2
+
+    ;swap horizontal velocities
+    lda XVel1
+    sta Temp
+    lda XVel2
+    sta XVel1
+    lda Temp
+    sta XVel2
+
+    ;swap vertical velocities
+    lda YVel1
+    sta Temp
+    lda YVel2
+    sta YVel1
+    lda Temp
+    sta YVel2
 
     rts
 
