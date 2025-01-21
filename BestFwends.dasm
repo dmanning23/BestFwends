@@ -3033,7 +3033,7 @@ TailsStunnedColor22
   .byte $2A ; Row 13
 
 TailsStunnedSpeed:
-  .byte 4 ; Animation speed
+  .byte 9 ; Animation speed
 
 TailsStunnedFrames:
   .byte 2 ; Number of frames
