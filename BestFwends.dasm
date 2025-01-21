@@ -114,6 +114,9 @@ RandomSeed .byte
 ;scratch variable
 Temp .byte
 
+; frame counter
+Frame .byte
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1868,6 +1871,49 @@ BumpP2 subroutine
     lda YVel1
     sta XVel2
 
+    rts
+
+
+
+;===============================================================================
+; UpdateTimer
+; -----------
+; udpates timer display
+;===============================================================================
+UpdateTimer subroutine
+    lda counter
+    and #63
+    beq .timerTick   ; tick the timer once every 64 frames
+    rts
+
+.timerTick 
+    lda TimerPF         ; get TimerPF
+    and #%11110000      ; and chop off the lower nybble
+    bne .decrementTimer  ; if the upper nybble is not 0 then time remains
+    lda #0              ; otherwise time ran out so end the game
+    sta GameState
+    ;ldy #sfxGAMEOVER    ; Game Over sound effect
+    ;jsr SFX_TRIGGER
+    rts
+
+.decrementTimer:
+    lsr TimerPF+5   ; PF2 right side, reversed bits so shift right
+    rol TimerPF+4   ; PF1 right side, normal bits so shift left
+    ror TimerPF+3   ; PF0 right side, reversed bits so shift right
+    lda TimerPF+3   ; only upper nybble used, so we need to put bit 3 into C
+    lsr
+    lsr
+    lsr
+    lsr
+    ror TimerPF+2   ; PF2 left side, reversed bits so shift right
+    rol TimerPF+1   ; PF1 left side, normal bits so shift left
+    ror TimerPF     ; PF0 left side, reversed bits so shift right
+    lda TimerPF+1   ; PF1 from left side
+    and #%00011111  ; check the lower 5 bits
+    bne .noTickSfx   ; branch if there's a value in the lower 5 bits
+    ;ldy #sfxPING    ; else do a sound effect
+    ;jsr SFX_TRIGGER
+.noTickSfx:
     rts
 
 
