@@ -114,8 +114,10 @@ RandomSeed .byte
 ;scratch variable
 Temp .byte
 
-; frame counter
-Frame .byte
+;Used to time the game
+;If this variable is anything but 0, the game is playing
+GameTimer .byte
+
 
 
 
@@ -131,110 +133,7 @@ Frame .byte
 Start
     CLEAN_START
     
-    ; set to quad
-    lda #5
-    sta NUSIZ0
-    sta NUSIZ1
-
-    ;set the background art
-    lda #%00000000
-    sta PF0
-    sta PF1
-    sta PF2
-
-    ;set the background color
-    ;lda #$0E
-    lda #$01
-    sta COLUBK
-    ;sta COLUPF
-
-    lda #%00010101 ; make missiles 2x-wide and set player sprites to double
-    ;lda #%00011111 ; make missiles 2x-wide and set player sprites to quad
-     ;lda #$20 ; make missiles 4x-wide
-    sta NUSIZ0
-    sta NUSIZ1
-
-    ;lda #%00110000 ;set ball 8x-wide
-    lda #%00100000 ;set ball 4x-wide
-    sta CTRLPF
-
-    ;set the ball color
-    lda ringColor
-    sta COLUPF
-
-    ;set both players to the center horizontally
-    lda #72
-    sta YPos1
-    sta YPos2
-
-    ;set the player 1 x position, right side of screen
-    lda #9
-    sta XPos1
-
-    ;set the player 2 x position, left side of screen
-    lda #147
-    sta XPos2
-    
-    ;initialize all the velocities
-    lda #0
-    sta XVel1
-    sta XVel2
-    sta YVel1
-    sta YVel2
-
-    ;initialize which direction the player is moving on each axis
-    sta YDirDown1
-    sta YDirDown2
-
-    ;Set the states of the players
-    sta PlayerState1
-    sta PlayerState2
-    sta Player1Braking
-    sta Player2Braking
-
-    ;set the stunned timers
-    sta Player1StunnedTimer
-    sta Player2StunnedTimer
-
-    ;make both players face right and move in the correct directions
-    lda #1
-    sta FaceRight1
-    sta XDirRight1
-    lda #0
-    sta FaceRight2
-    sta XDirRight2
-
-    ;reset the counters
-    lda #0
-    sta counter
-
-    ;reset the pointers
-    sta spritePtr1
-    sta spritePtr1+1
-    sta spritePtr2
-    sta spritePtr2+1
-    sta spriteColorPtr1
-    sta spriteColorPtr1+1
-    sta spriteColorPtr2
-    sta spriteColorPtr2+1
-
-    ;set all the animation variables
-    sta currentAnimationTime
-    sta currentAnimationFrame
-    lda #30
-    sta animationTiming
-    lda #1
-    sta numAnimationFrames
-
-    ; seed the random number generator
-    lda INTIM       ; unknown value
-    sta RandomSeed       ; use as seed
-    
-    lda #0 
-    sta Temp
-
-    ;set the initial ring position
-    jsr RandomizeRingPosition
+    jsr InitializeVariables
 
 NextFrame subroutine
 
@@ -244,7 +143,7 @@ NextFrame subroutine
     jmp .continue ;don't reset
 
 .reset
-    jmp Start
+    jsr StartGame
 
 .continue
 
@@ -905,7 +804,7 @@ DoneUpdatingPlayerState
 
 
 
-   
+
 
 
 ;Skip all the way down here if we aren't updating the player this frame
@@ -1120,6 +1019,9 @@ PlayerCollisionLogic subroutine
 ;TODO: check collision with ring
 
 
+
+
+;TODO: skip all the way down here if the game is not playing?
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1888,32 +1790,28 @@ UpdateTimer subroutine
     rts
 
 .timerTick 
-    lda TimerPF         ; get TimerPF
-    and #%11110000      ; and chop off the lower nybble
+    lda GameTimer         ; get TimerPF
     bne .decrementTimer  ; if the upper nybble is not 0 then time remains
-    lda #0              ; otherwise time ran out so end the game
-    sta GameState
+
+    ;TODO: otherwise time ran out so end the game
+
     ;ldy #sfxGAMEOVER    ; Game Over sound effect
     ;jsr SFX_TRIGGER
     rts
 
 .decrementTimer:
-    lsr TimerPF+5   ; PF2 right side, reversed bits so shift right
-    rol TimerPF+4   ; PF1 right side, normal bits so shift left
-    ror TimerPF+3   ; PF0 right side, reversed bits so shift right
-    lda TimerPF+3   ; only upper nybble used, so we need to put bit 3 into C
-    lsr
-    lsr
-    lsr
-    lsr
-    ror TimerPF+2   ; PF2 left side, reversed bits so shift right
-    rol TimerPF+1   ; PF1 left side, normal bits so shift left
-    ror TimerPF     ; PF0 left side, reversed bits so shift right
-    lda TimerPF+1   ; PF1 from left side
+    lda GameTimer
+    sec ;Set carry flag
+    sbc #1 ;Subtract 1
+    sta GameTimer
+
+    ;TODO: play the game ending soon sound effect
+
     and #%00011111  ; check the lower 5 bits
     bne .noTickSfx   ; branch if there's a value in the lower 5 bits
     ;ldy #sfxPING    ; else do a sound effect
     ;jsr SFX_TRIGGER
+
 .noTickSfx:
     rts
 
@@ -1960,6 +1858,148 @@ CrashPlayers subroutine
     sta YVel2
 
     rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Initialize all the variables to their default values
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+InitializeVariables subroutine
+    ; set to quad
+    lda #5
+    sta NUSIZ0
+    sta NUSIZ1
+
+    ;set the background art
+    lda #%00000000
+    sta PF0
+    sta PF1
+    sta PF2
+
+    ;set the background color
+    lda #$08
+    sta COLUBK
+
+    lda #%00010101 ; make missiles 2x-wide and set player sprites to double
+    ;lda #%00011111 ; make missiles 2x-wide and set player sprites to quad
+     ;lda #$20 ; make missiles 4x-wide
+    sta NUSIZ0
+    sta NUSIZ1
+
+    ;lda #%00110000 ;set ball 8x-wide
+    lda #%00100000 ;set ball 4x-wide
+    sta CTRLPF
+
+    ;set the ball color
+    lda ringColor
+    sta COLUPF
+
+    ;set both players to the center horizontally
+    lda #72
+    sta YPos1
+    sta YPos2
+
+    ;set the player 1 x position, right side of screen
+    lda #9
+    sta XPos1
+
+    ;set the player 2 x position, left side of screen
+    lda #147
+    sta XPos2
+    
+    ;initialize all the velocities
+    lda #0
+    sta XVel1
+    sta XVel2
+    sta YVel1
+    sta YVel2
+
+    ;initialize which direction the player is moving on each axis
+    sta YDirDown1
+    sta YDirDown2
+
+    ;Set the states of the players
+    sta PlayerState1
+    sta PlayerState2
+    sta Player1Braking
+    sta Player2Braking
+
+    ;set the stunned timers
+    sta Player1StunnedTimer
+    sta Player2StunnedTimer
+
+    ;make both players face right and move in the correct directions
+    lda #1
+    sta FaceRight1
+    sta XDirRight1
+    lda #0
+    sta FaceRight2
+    sta XDirRight2
+
+    ;reset the counters
+    lda #0
+    sta counter
+
+    ;reset the pointers
+    sta spritePtr1
+    sta spritePtr1+1
+    sta spritePtr2
+    sta spritePtr2+1
+    sta spriteColorPtr1
+    sta spriteColorPtr1+1
+    sta spriteColorPtr2
+    sta spriteColorPtr2+1
+
+    ;set all the animation variables
+    sta currentAnimationTime
+    sta currentAnimationFrame
+    lda #30
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
+
+    ; seed the random number generator
+    lda INTIM       ; unknown value
+    sta RandomSeed       ; use as seed
+    
+    lda #0 
+    sta Temp
+
+    ;set the initial ring position
+    jsr RandomizeRingPosition
+
+    ;set the game to not playing
+    lda #0
+    sta GameTimer
+
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; The player hit the reset switch, start a game
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+StartGame subroutine
+    ;initialize all the variables to their defaults
+    jsr InitializeVariables
+
+    ;set the background color
+    lda #$01
+    sta COLUBK
+
+    ;Randomize the ring position
+    jsr RandomizeRingPosition
+
+    ;start the timer
+    lda #64
+    sta GameTimer
+
+    rts
+
 
 
 
