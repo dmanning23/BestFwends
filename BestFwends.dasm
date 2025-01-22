@@ -2031,7 +2031,7 @@ StartGame subroutine
     jsr RandomizeRingPosition
 
     ;start the timer
-    lda #90
+    lda #120
     sta GameTimer
 
     rts
