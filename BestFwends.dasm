@@ -1596,6 +1596,10 @@ DrawPlayer subroutine
 
     ;Skip to the next line and draw the ring
     sta WSYNC
+
+    ;Dont draw the ring if game over
+    lda GameTimer
+    beq .SkipRing
     
     ;Are we drawing the ring?
     txa
