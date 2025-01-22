@@ -174,7 +174,24 @@ NextFrame subroutine
     and %00000001      ; Mask with 1 to isolate least significant bit
     tay ;store the current player in y
 
+    ;skip if the game is not running
+    ;update the gametimer
+    jsr UpdateTimer
+    lda GameTimer
+    bne DontSkipForGameOver
+
+    jmp SkipToHereIfGameOver
+
+DontSkipForGameOver
+
+    
+
 SetP1ControllerMask subroutine
+
+    ;Since we are only drawing one player per frame, which one needs to have x pos set?
+    lda counter
+    and %00000001
+    tay
 
     ;set the controller mask properly depending on which player we are updating
     beq .SetP1ControllerMask
@@ -977,7 +994,7 @@ PlayerCollisionLogic subroutine
     lda StunnedState
     sta PlayerState2
 
-    ;Start the stun timer
+    ;start the stun timer
     lda StunAmountTime
     sta Player2StunnedTimer
 
@@ -999,7 +1016,7 @@ PlayerCollisionLogic subroutine
     lda StunnedState
     sta PlayerState1
 
-    ;Start the stun timer
+    ;start the stun timer
     lda StunAmountTime
     sta Player1StunnedTimer
 
@@ -1021,7 +1038,98 @@ PlayerCollisionLogic subroutine
 
 
 
-;TODO: skip all the way down here if the game is not playing?
+;skip all the way down here if the game is not playing?
+
+
+AddVelocityToPosition subroutine
+    ;is the player moving right?
+    lda XDirRight1,y
+    bne .AddHorizontalVelocityToPosition
+
+    ;the player is mvoing left, subtract their position
+    lda XPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;if the player position underflowed, set to 156
+    cmp #157
+    bcc .DoneClampingHorizontalUnderflow
+    lda #156
+    sta XPos1,y 
+
+.DoneClampingHorizontalUnderflow
+
+    jmp .DoneAddingHorizontalVelocityToPosition
+
+.AddHorizontalVelocityToPosition:
+
+    ;add velocity to position
+    lda XPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #157
+    bcc .DoneClampingHorizontalOverflow
+    lda #0
+    sta XPos1,y 
+
+.DoneClampingHorizontalOverflow
+
+.DoneAddingHorizontalVelocityToPosition
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Set the vertical screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ;is the player moving down?
+    lda YDirDown1,y
+    beq .AddVerticalVelocityToPosition
+
+    ;the player is moving up, subtract their position
+    lda YPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position underflowed, set to 164
+    cmp #173
+    bcc .DoneClampingVerticalUnderflow
+    lda #172
+    sta YPos1,y 
+
+.DoneClampingVerticalUnderflow
+
+    jmp .DoneAddingVerticalVelocityToPosition
+
+.AddVerticalVelocityToPosition:
+
+    ;add velocity to position
+    lda YPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #173
+    bcc .DoneClampingVerticalOverflow
+    lda #0
+    sta YPos1,y 
+
+.DoneClampingVerticalOverflow
+
+.DoneAddingVerticalVelocityToPosition
+
+
+
+SkipToHereIfGameOver
+
+
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1319,7 +1427,7 @@ UpdateAnimation subroutine
     lda currentAnimationFrame  ; Check if frame is 0
     beq .doneUpdatingSpritePointer                  ; If 0, no adding needed
 
-    ldx currentAnimationFrame ; Use X as our counter
+    ldx currentAnimationFrame ; Use X as our frameCounter
     
 .addLoop:
     clc                       ; Clear carry before addition
@@ -1330,7 +1438,7 @@ UpdateAnimation subroutine
     adc #0
     sta spritePtr1+1
     
-    dex                      ; Decrement counter
+    dex                      ; Decrement frameCounter
     bne .addLoop             ; Keep going if we're not done
 
 .doneUpdatingSpritePointer
@@ -1434,87 +1542,7 @@ UpdatePosition subroutine
     sta WSYNC	; sync w/ scanline
     sta HMOVE	; apply fine offsets
 
-    ;is the player moving right?
-    lda XDirRight1,y
-    bne .AddHorizontalVelocityToPosition
 
-    ;the player is mvoing left, subtract their position
-    lda XPos1,y    ; Load first value into accumulator
-    sec                ; Clear carry flag before addition
-    sbc XVel1,y   ; Add second value to accumulator
-    sta XPos1,y         ; Store the sum in result memory location
-
-    ;if the player position underflowed, set to 156
-    cmp #157
-    bcc .DoneClampingHorizontalUnderflow
-    lda #156
-    sta XPos1,y 
-
-.DoneClampingHorizontalUnderflow
-
-    jmp .DoneAddingHorizontalVelocityToPosition
-
-.AddHorizontalVelocityToPosition:
-
-    ;add velocity to position
-    lda XPos1,y    ; Load first value into accumulator
-    clc                ; Clear carry flag before addition
-    adc XVel1,y   ; Add second value to accumulator
-    sta XPos1,y         ; Store the sum in result memory location
-
-    ;if the player position overflowed, set to 0
-    cmp #157
-    bcc .DoneClampingHorizontalOverflow
-    lda #0
-    sta XPos1,y 
-
-.DoneClampingHorizontalOverflow
-
-.DoneAddingHorizontalVelocityToPosition
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Set the vertical screen position of the correct player
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    ;is the player moving down?
-    lda YDirDown1,y
-    beq .AddVerticalVelocityToPosition
-
-    ;the player is moving up, subtract their position
-    lda YPos1,y    ; Load first value into accumulator
-    sec                ; Clear carry flag before addition
-    sbc YVel1,y   ; Add second value to accumulator
-    sta YPos1,y         ; Store the sum in result memory location
-
-    ;if the player position underflowed, set to 164
-    cmp #173
-    bcc .DoneClampingVerticalUnderflow
-    lda #172
-    sta YPos1,y 
-
-.DoneClampingVerticalUnderflow
-
-    jmp .DoneAddingVerticalVelocityToPosition
-
-.AddVerticalVelocityToPosition:
-
-    ;add velocity to position
-    lda YPos1,y    ; Load first value into accumulator
-    clc                ; Clear carry flag before addition
-    adc YVel1,y   ; Add second value to accumulator
-    sta YPos1,y         ; Store the sum in result memory location
-
-    ;if the player position overflowed, set to 0
-    cmp #173
-    bcc .DoneClampingVerticalOverflow
-    lda #0
-    sta YPos1,y 
-
-.DoneClampingVerticalOverflow
-
-.DoneAddingVerticalVelocityToPosition
     
     TIMER_WAIT
 
@@ -1778,11 +1806,12 @@ BumpP2 subroutine
 
 
 
-;===============================================================================
-; UpdateTimer
-; -----------
-; udpates timer display
-;===============================================================================
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Update the game timer
+    ; Play the appropriate sounds
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UpdateTimer subroutine
     lda counter
     and #63
@@ -1794,6 +1823,9 @@ UpdateTimer subroutine
     bne .decrementTimer  ; if the upper nybble is not 0 then time remains
 
     ;TODO: otherwise time ran out so end the game
+
+    lda #$08
+    sta COLUBK
 
     ;ldy #sfxGAMEOVER    ; Game Over sound effect
     ;jsr SFX_TRIGGER
@@ -1995,7 +2027,7 @@ StartGame subroutine
     jsr RandomizeRingPosition
 
     ;start the timer
-    lda #64
+    lda #10
     sta GameTimer
 
     rts
