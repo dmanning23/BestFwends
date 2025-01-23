@@ -190,7 +190,7 @@ NextFrame subroutine
 
 DontSkipForGameOver
 
-    
+
 
 SetP1ControllerMask subroutine
 
@@ -1958,43 +1958,6 @@ CrashPlayers subroutine
 
     rts
 
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Check if a character is colliding with the ring
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-CheckRingCollision subroutine
-    ; Check if |XPos1 - XPosRing| < (12 + 10) / 2
-    sec
-    lda XPos1,y
-    sbc ringX
-    bcs .skip1
-    eor #$FF
-    adc #1
-.skip1:
-    cmp #11         ; Combined width threshold (12 + 10) / 2
-    bcs .noCollision
-
-    ; Check if |YPos1 - YPosRing| < (24 + 16) / 2
-    sec
-    lda YPos1,y
-    sbc ringY
-    bcs .skip2
-    eor #$FF
-    adc #1
-.skip2:
-    cmp #20         ; Combined height threshold (24 + 16) / 2
-    bcs .noCollision
-
-    ; Collision detected
-    lda #1
-    rts
-
-.noCollision:
-    lda #0
-    rts
 
 
 
