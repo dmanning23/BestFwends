@@ -119,8 +119,16 @@ Temp .byte
 GameTimer .byte
 
 ;The player scores
+;This is super fucking obnoxious,
+; but for some reason the rings are collected by the wrong player.
+; Rather than fix this bug, I'm being a lazy programmer and just 
+; switching everything else about score keeping >:)
 Player1Score .byte
 Player2Score .byte
+
+; 2x5 array of playfield bytes, used for drawing scores
+FontBuf	ds 10
+
 
 
 
@@ -171,6 +179,14 @@ NextFrame subroutine
     sta RESP1
     sta HMP0
     sta HMP1
+
+    ;Set up the scores
+    lda Player2Score
+    ldx #0
+    jsr GetBCDBitmap
+    lda Player1Score
+    ldx #5
+    jsr GetBCDBitmap
 
     ;Increment the frame counter 
     inc counter
@@ -1064,6 +1080,7 @@ RingCollectionLogic subroutine
     jmp .noCollision
 
 .playerCollision
+
     ;add 1 to the current player's score
     lda Player1Score,y
     clc
@@ -1601,6 +1618,44 @@ UpdatePosition subroutine
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    ;Draw the score board for 10 lines
+    ; First, we'll draw the scoreboard.
+    ; Put the playfield into score mode (bit 2) which gives
+    ; two different colors for the left/right side of
+    ; the playfield (given by COLUP0 and COLUP1).
+    lda #%00100010	; score mode + 2 pixel ball
+    sta CTRLPF
+    lda #$94
+    sta COLUP0	; set color for left
+    lda #$2c
+    sta COLUP1	; set color for right
+    ; Now we draw all four digits.
+	ldy #0		; Y will contain the frame Y coordinate
+ScanLoop1a
+    sta WSYNC
+    tya
+    lsr		; divide Y by two for double-height lines
+    tax		; -> X
+    lda FontBuf+0,x
+    sta PF1		; set left score bitmap
+    SLEEP 28
+    lda FontBuf+5,x
+    sta PF1		; set right score bitmap
+    iny
+    cpy #10
+    bcc ScanLoop1a
+
+    ; Clear the playfield
+    lda #0
+    sta WSYNC
+    sta PF1
+    ; Turn playfield reflection off (and turn score mode off)
+    lda #%00100100	; no reflection + ball priority + 2 pixel ball
+    sta CTRLPF
+
+
+
+
     ;Which player is being drawn this frame?
     lda counter
     and #$01
@@ -1617,7 +1672,7 @@ DrawP1
     sta Temp
 
 DrawPlayer subroutine
-    ldx #192	; X = 192 scanlines
+    ldx #182	; X = 192 scanlines
 .LVScan
     txa		; X -> A
     sec		; set carry for subtract
@@ -1831,10 +1886,10 @@ BumpP1 subroutine
     sta XVel1
 
     ;Subtract from the player's score
-    lda Player1Score
+    lda Player2Score
     beq .skipScore
 
-    dec Player1Score
+    dec Player2Score
 
 .skipScore
 
@@ -1862,10 +1917,10 @@ BumpP2 subroutine
     sta XVel2
 
     ;Subtract from the player's score
-    lda Player2Score
+    lda Player1Score
     beq .skipScore
 
-    dec Player2Score
+    dec Player1Score
 
 .skipScore
 
@@ -2103,6 +2158,77 @@ StartGame subroutine
     sta GameTimer
 
     rts
+
+
+
+
+
+; Fetches bitmap data for two digits of a
+; BCD-encoded number, storing it in addresses
+; FontBuf+x to FontBuf+4+x.
+GetBCDBitmap subroutine
+; First fetch the bytes for the 1st digit
+	pha		; save original BCD number
+        and #$0F	; mask out the least significant digit
+        sta Temp
+        asl
+        asl
+        adc Temp	; multiply by 5
+        tay		; -> Y
+        lda #5
+        sta Temp	; count down from 5
+.loop1
+        lda DigitsBitmap,y
+        and #$0F	; mask out leftmost digit
+        sta FontBuf,x	; store leftmost digit
+        iny
+        inx
+        dec Temp
+        bne .loop1
+; Now do the 2nd digit
+        pla		; restore original BCD number
+        lsr
+        lsr
+        lsr
+        lsr		; shift right by 4 (in BCD, divide by 10)
+        sta Temp
+        asl
+        asl
+        adc Temp	; multiply by 5
+        tay		; -> Y
+        dex
+        dex
+        dex
+        dex
+        dex		; subtract 5 from X (reset to original)
+        lda #5
+        sta Temp	; count down from 5
+.loop2
+        lda DigitsBitmap,y
+        and #$F0	; mask out leftmost digit
+        ora FontBuf,x	; combine left and right digits
+        sta FontBuf,x	; store combined digits
+        iny
+        inx
+        dec Temp
+        bne .loop2
+	rts
+
+
+; Bitmap pattern for digits
+DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
+        .byte $EE,$AA,$AA,$AA,$EE
+        .byte $22,$22,$22,$22,$22
+        .byte $EE,$22,$EE,$88,$EE
+        .byte $EE,$22,$66,$22,$EE
+        .byte $AA,$AA,$EE,$22,$22
+        .byte $EE,$88,$EE,$22,$EE
+        .byte $EE,$88,$EE,$AA,$EE
+        .byte $EE,$22,$22,$22,$22
+        .byte $EE,$AA,$EE,$AA,$EE
+        .byte $EE,$AA,$EE,$22,$EE
+
+
 
 
 
