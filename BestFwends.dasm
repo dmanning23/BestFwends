@@ -172,7 +172,7 @@ NextFrame subroutine
     sta HMP0
     sta HMP1
 
-	;Increment the frame counter 
+    ;Increment the frame counter 
     inc counter
 
     ;Since we are only drawing one player per frame, which one needs to have x pos set?
@@ -1054,14 +1054,23 @@ PlayerCollisionLogic subroutine
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 RingCollectionLogic subroutine
-    jsr CheckRingCollision
-    beq .noCollision
 
-    ;add 1 to the players score
+.checkPlayerRingCollision
+
+    lda #%01000000
+    bit CXP0FB	; collision between player 0 and ball?
+    bne .playerCollision
+
+    jmp .noCollision
+
+.playerCollision
+    ;add 1 to the current player's score
     lda Player1Score,y
     clc
     adc #1
     sta Player1Score,y
+
+    ;do the ring collection logic
 
     ;reset the ring to a new position
     jsr RandomizeRingPosition
@@ -1069,6 +1078,9 @@ RingCollectionLogic subroutine
     ;TODO: play the ring collection sound effect
 
 .noCollision
+
+    ; Clear collision registers for next frame
+    sta CXCLR
 
 
 
