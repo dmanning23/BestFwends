@@ -118,6 +118,9 @@ Temp .byte
 ;If this variable is anything but 0, the game is playing
 GameTimer .byte
 
+;The player scores
+Player1Score .byte
+Player2Score .byte
 
 
 
@@ -143,6 +146,9 @@ NextFrame subroutine
     jmp .continue ;don't reset
 
 .reset
+
+    jsr Random
+    ;jsr RandomizeRingPosition
     jsr StartGame
 
 .continue
@@ -1000,6 +1006,9 @@ PlayerCollisionLogic subroutine
 
     ;Perform the bump logic on their velocity
     jsr BumpP2
+    
+    ;TODO: play the bump sound effect
+    
     jmp .done
 
 .p2IsSpinning
@@ -1022,6 +1031,9 @@ PlayerCollisionLogic subroutine
 
     ;Perform the bump logic on their velocity
     jsr BumpP1
+
+    ;TODO: play the bump sound effect
+
     jmp .done
 
 .clash
@@ -1029,11 +1041,34 @@ PlayerCollisionLogic subroutine
     ;both players are spinning, perform the clash maneuver
     jsr CrashPlayers
 
+    ;TODO: play the crash sound effect
+
 .done
 
 
 
-;TODO: check collision with ring
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; check collision with ring and perform ring collection logic
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RingCollectionLogic subroutine
+    jsr CheckRingCollision
+    beq .noCollision
+
+    ;add 1 to the players score
+    lda Player1Score,y
+    clc
+    adc #1
+    sta Player1Score,y
+
+    ;reset the ring to a new position
+    jsr RandomizeRingPosition
+
+    ;TODO: play the ring collection sound effect
+
+.noCollision
 
 
 
@@ -1732,7 +1767,7 @@ RandomizeRingPosition:
 
 
 CheckCharCollision subroutine
-    ; Check if |XPos1 - XPos2| < width(8)
+    ; Check if |XPos1 - XPos2| < width(12)
     sec
     lda XPos1
     sbc XPos2
@@ -1743,7 +1778,7 @@ CheckCharCollision subroutine
     cmp #12          ; width is immediate value
     bcs .noCollision
 
-    ; Check if |YPos1 - YPos2| < height(12)
+    ; Check if |YPos1 - YPos2| < height(24)
     sec
     lda YPos1
     sbc YPos2
@@ -1752,7 +1787,7 @@ CheckCharCollision subroutine
     adc #1
 .skip2:
     cmp #24         ; height is immediate value
-    BCS .noCollision
+    bcs .noCollision
 
     ; If we get here, there is a collision
     lda #1
@@ -1783,6 +1818,14 @@ BumpP1 subroutine
     lda YVel2
     sta XVel1
 
+    ;Subtract from the player's score
+    lda Player1Score
+    beq .skipScore
+
+    dec Player1Score
+
+.skipScore
+
     rts
 
 
@@ -1805,6 +1848,14 @@ BumpP2 subroutine
 
     lda YVel1
     sta XVel2
+
+    ;Subtract from the player's score
+    lda Player2Score
+    beq .skipScore
+
+    dec Player2Score
+
+.skipScore
 
     rts
 
@@ -1894,6 +1945,45 @@ CrashPlayers subroutine
     sta YVel2
 
     rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Check if a character is colliding with the ring
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CheckRingCollision subroutine
+    ; Check if |XPos1 - XPosRing| < (12 + 10) / 2
+    sec
+    lda XPos1,y
+    sbc ringX
+    bcs .skip1
+    eor #$FF
+    adc #1
+.skip1:
+    cmp #11         ; Combined width threshold (12 + 10) / 2
+    bcs .noCollision
+
+    ; Check if |YPos1 - YPosRing| < (24 + 16) / 2
+    sec
+    lda YPos1,y
+    sbc ringY
+    bcs .skip2
+    eor #$FF
+    adc #1
+.skip2:
+    cmp #20         ; Combined height threshold (24 + 16) / 2
+    bcs .noCollision
+
+    ; Collision detected
+    lda #1
+    rts
+
+.noCollision:
+    lda #0
+    rts
+
 
 
 
@@ -2009,6 +2099,9 @@ InitializeVariables subroutine
     ;set the game to not playing
     lda #0
     sta GameTimer
+
+    sta Player1Score
+    sta Player2Score
 
     rts
 
