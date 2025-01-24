@@ -129,7 +129,9 @@ Player2Score .byte
 ; 2x5 array of playfield bytes, used for drawing scores
 FontBuf	ds 10
 
-
+; indexes for sound effect driver    
+SFX_LEFT:       ds 1    ; stored in $B1
+SFX_RIGHT:      ds 1    ; stored in $B2
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -192,9 +194,7 @@ NextFrame subroutine
     inc counter
 
     ;Since we are only drawing one player per frame, which one needs to have x pos set?
-    lda counter
-    and %00000001      ; Mask with 1 to isolate least significant bit
-    tay ;store the current player in y
+    jsr SetCharacter
 
     ;skip if the game is not running
     ;update the gametimer
@@ -211,9 +211,7 @@ DontSkipForGameOver
 SetP1ControllerMask subroutine
 
     ;Since we are only drawing one player per frame, which one needs to have x pos set?
-    lda counter
-    and %00000001
-    tay
+    jsr SetCharacter
 
     ;set the controller mask properly depending on which player we are updating
     beq .SetP1ControllerMask
@@ -1023,7 +1021,13 @@ PlayerCollisionLogic subroutine
     ;Perform the bump logic on their velocity
     jsr BumpP2
     
-    ;TODO: play the bump sound effect
+    ;play the bump sound effect
+
+    ldy #sfxBUMP     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
     
     jmp .done
 
@@ -1048,7 +1052,13 @@ PlayerCollisionLogic subroutine
     ;Perform the bump logic on their velocity
     jsr BumpP1
 
-    ;TODO: play the bump sound effect
+    ;play the bump sound effect
+
+    ldy #sfxBUMP     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
 
     jmp .done
 
@@ -1057,7 +1067,12 @@ PlayerCollisionLogic subroutine
     ;both players are spinning, perform the clash maneuver
     jsr CrashPlayers
 
-    ;TODO: play the crash sound effect
+    ;play the crash sound effect
+    ldy #sfxCRASH     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
 
 .done
 
@@ -1092,7 +1107,13 @@ RingCollectionLogic subroutine
     ;reset the ring to a new position
     jsr RandomizeRingPosition
 
-    ;TODO: play the ring collection sound effect
+    ;play the ring collection sound effect
+
+    ldy #sfxCOLLECT     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
 
 .noCollision
 
@@ -1740,6 +1761,9 @@ DrawPlayer subroutine
 
 OverScan
     TIMER_SETUP 29
+
+    jsr SFX_UPDATE
+
     lda $0 ;dont draw the sprite in the overscan
     sta GRP0
     sta COLUP0
@@ -1949,6 +1973,8 @@ UpdateTimer subroutine
     lda #$08
     sta COLUBK
 
+    ;TODO: play the game over sound effect
+    
     ;ldy #sfxGAMEOVER    ; Game Over sound effect
     ;jsr SFX_TRIGGER
     rts
@@ -2154,9 +2180,19 @@ StartGame subroutine
     jsr RandomizeRingPosition
 
     ;start the timer
-    lda #120
+    lda #90
     sta GameTimer
 
+    rts
+
+
+
+
+
+SetCharacter subroutine
+    lda counter
+    and %00000001
+    tay
     rts
 
 
@@ -2168,52 +2204,90 @@ StartGame subroutine
 ; FontBuf+x to FontBuf+4+x.
 GetBCDBitmap subroutine
 ; First fetch the bytes for the 1st digit
-	pha		; save original BCD number
-        and #$0F	; mask out the least significant digit
-        sta Temp
-        asl
-        asl
-        adc Temp	; multiply by 5
-        tay		; -> Y
-        lda #5
-        sta Temp	; count down from 5
+    pha		; save original BCD number
+    and #$0F	; mask out the least significant digit
+    sta Temp
+    asl
+    asl
+    adc Temp	; multiply by 5
+    tay		; -> Y
+    lda #5
+    sta Temp	; count down from 5
 .loop1
-        lda DigitsBitmap,y
-        and #$0F	; mask out leftmost digit
-        sta FontBuf,x	; store leftmost digit
-        iny
-        inx
-        dec Temp
-        bne .loop1
+    lda DigitsBitmap,y
+    and #$0F	; mask out leftmost digit
+    sta FontBuf,x	; store leftmost digit
+    iny
+    inx
+    dec Temp
+    bne .loop1
 ; Now do the 2nd digit
-        pla		; restore original BCD number
-        lsr
-        lsr
-        lsr
-        lsr		; shift right by 4 (in BCD, divide by 10)
-        sta Temp
-        asl
-        asl
-        adc Temp	; multiply by 5
-        tay		; -> Y
-        dex
-        dex
-        dex
-        dex
-        dex		; subtract 5 from X (reset to original)
-        lda #5
-        sta Temp	; count down from 5
+    pla		; restore original BCD number
+    lsr
+    lsr
+    lsr
+    lsr		; shift right by 4 (in BCD, divide by 10)
+    sta Temp
+    asl
+    asl
+    adc Temp	; multiply by 5
+    tay		; -> Y
+    dex
+    dex
+    dex
+    dex
+    dex		; subtract 5 from X (reset to original)
+    lda #5
+    sta Temp	; count down from 5
 .loop2
-        lda DigitsBitmap,y
-        and #$F0	; mask out leftmost digit
-        ora FontBuf,x	; combine left and right digits
-        sta FontBuf,x	; store combined digits
-        iny
-        inx
-        dec Temp
-        bne .loop2
-	rts
+    lda DigitsBitmap,y
+    and #$F0	; mask out leftmost digit
+    ora FontBuf,x	; combine left and right digits
+    sta FontBuf,x	; store combined digits
+    iny
+    inx
+    dec Temp
+    bne .loop2
+    rts
 
+
+
+
+
+
+;===============================================================================
+; Sound Effects
+; -------------
+; Sound effect routines are stored in another source code file.
+; In order to use them, you need to allocate 2 RAM variables:
+;
+;   SFX_LEFT:       ds 1
+;   SFX_RIGHT:      ds 1
+;
+; and include the other file:
+;           include sfx.asm
+;
+; Once per frame call SFX_UPDATE.  Preferably at the same instance every frame
+; so the durations don't vary, so call it at either the start of VerticalBlank
+;   VerticalBlank:
+;           jsr SFX_UPDATE
+;
+; or at the start of OverScan:
+;
+;   OverScan:
+;           ... ; turn off video and set timer, then call
+;           jsr SFX_UPDATE
+;           ... 
+;
+; To trigger a sound effect, load Y with the effect and call SFX_TRIGGER
+;
+;           ldy #??
+;           jsr SFX_TRIGGER
+;
+; If you'd like to silence output output at any time, call SFX_OFF:
+;           jsr SFX_OFF
+;===============================================================================
+        include sfx.asm
 
 ; Bitmap pattern for digits
 DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
