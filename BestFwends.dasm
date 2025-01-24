@@ -743,6 +743,13 @@ CheckIsBraking
     ;set their state to "Braking"
     lda BrakingState
     sta PlayerState1,y
+
+    ;Play the braking sound effect
+    ldy #sfxBRAKE     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
     
     ;finish updating state
     jmp DoneUpdatingPlayerState
@@ -923,6 +930,13 @@ RunPlayerLogic subroutine
     ;set the player to "rolling"
     lda RollingState
     sta PlayerState1,y
+
+    ;play the rolling sound
+    ldy #sfxROLL     ; select sound effect
+    jsr SFX_TRIGGER     ; and trigger it
+
+    ;reset the y register
+    jsr SetCharacter
 
     ;double the player's speed
     lda XVel1,y
@@ -1968,15 +1982,16 @@ UpdateTimer subroutine
     lda GameTimer         ; get TimerPF
     bne .decrementTimer  ; if the upper nybble is not 0 then time remains
 
-    ;TODO: otherwise time ran out so end the game
+    ;otherwise time ran out so end the game
 
     lda #$08
     sta COLUBK
 
     ;TODO: play the game over sound effect
     
-    ;ldy #sfxGAMEOVER    ; Game Over sound effect
-    ;jsr SFX_TRIGGER
+    ;ldy #sfxGAMEOVER     ; select sound effect
+    ;jsr SFX_TRIGGER     ; and trigger it
+
     rts
 
 .decrementTimer:
@@ -1987,12 +2002,13 @@ UpdateTimer subroutine
 
     ;TODO: play the game ending soon sound effect
 
-    and #%00011111  ; check the lower 5 bits
-    bne .noTickSfx   ; branch if there's a value in the lower 5 bits
-    ;ldy #sfxPING    ; else do a sound effect
-    ;jsr SFX_TRIGGER
+    ;and #%00011111  ; check the lower 5 bits
+    ;bne .noTickSfx   ; branch if there's a value in the lower 5 bits
+    
+    ;ldy #sfxGAMEOVER     ; select sound effect
+    ;jsr SFX_TRIGGER     ; and trigger it
 
-.noTickSfx:
+;.noTickSfx:
     rts
 
 
