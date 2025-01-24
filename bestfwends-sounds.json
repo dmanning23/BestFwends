@@ -1,0 +1,357 @@
+{
+  "gameName": "BestFwends",
+  "soundEffects": [
+    {
+      "id": 1737666797847,
+      "name": "Collect",
+      "tones": [
+        {
+          "id": 1737666802713,
+          "channel": 4,
+          "volume": 8,
+          "frequency": 11
+        },
+        {
+          "id": 1737672806113,
+          "channel": 4,
+          "volume": 15,
+          "frequency": 11
+        },
+        {
+          "id": 1737672806729,
+          "channel": 4,
+          "volume": 14,
+          "frequency": 11
+        },
+        {
+          "id": 1737672807282,
+          "channel": 4,
+          "volume": 13,
+          "frequency": 11
+        },
+        {
+          "id": 1737672808347,
+          "channel": 4,
+          "volume": 12,
+          "frequency": 11
+        },
+        {
+          "id": 1737672808978,
+          "channel": 4,
+          "volume": 11,
+          "frequency": 11
+        },
+        {
+          "id": 1737672809519,
+          "channel": 4,
+          "volume": 10,
+          "frequency": 11
+        },
+        {
+          "id": 1737672810111,
+          "channel": 4,
+          "volume": 15,
+          "frequency": 6
+        },
+        {
+          "id": 1737672810785,
+          "channel": 4,
+          "volume": 14,
+          "frequency": 6
+        },
+        {
+          "id": 1737672815771,
+          "channel": 4,
+          "volume": 13,
+          "frequency": 6
+        },
+        {
+          "id": 1737672816224,
+          "channel": 4,
+          "volume": 12,
+          "frequency": 6
+        },
+        {
+          "id": 1737672816721,
+          "channel": 4,
+          "volume": 11,
+          "frequency": 6
+        },
+        {
+          "id": 1737673375234,
+          "channel": 4,
+          "volume": 10,
+          "frequency": 6
+        },
+        {
+          "id": 1737673375846,
+          "channel": 4,
+          "volume": 9,
+          "frequency": 6
+        },
+        {
+          "id": 1737673561530,
+          "channel": 4,
+          "volume": 8,
+          "frequency": 6
+        },
+        {
+          "id": 1737673562140,
+          "channel": 4,
+          "volume": 7,
+          "frequency": 6
+        },
+        {
+          "id": 1737673563045,
+          "channel": 4,
+          "volume": 6,
+          "frequency": 6
+        },
+        {
+          "id": 1737673679815,
+          "channel": 4,
+          "volume": 5,
+          "frequency": 6
+        },
+        {
+          "id": 1737673681171,
+          "channel": 4,
+          "volume": 4,
+          "frequency": 6
+        },
+        {
+          "id": 1737673756755,
+          "channel": 4,
+          "volume": 3,
+          "frequency": 6
+        },
+        {
+          "id": 1737673757242,
+          "channel": 4,
+          "volume": 2,
+          "frequency": 6
+        },
+        {
+          "id": 1737673757882,
+          "channel": 4,
+          "volume": 1,
+          "frequency": 6
+        }
+      ]
+    },
+    {
+      "id": 1737672702268,
+      "name": "Bump",
+      "tones": [
+        {
+          "id": 1737672912830,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 1
+        },
+        {
+          "id": 1737672914105,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 3
+        },
+        {
+          "id": 1737672915112,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 5
+        },
+        {
+          "id": 1737672915849,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 7
+        },
+        {
+          "id": 1737672916450,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 9
+        },
+        {
+          "id": 1737672917586,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 11
+        },
+        {
+          "id": 1737672918338,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 13
+        },
+        {
+          "id": 1737672918858,
+          "channel": 6,
+          "volume": 12,
+          "frequency": 15
+        },
+        {
+          "id": 1737672919858,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 17
+        },
+        {
+          "id": 1737672920310,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 19
+        },
+        {
+          "id": 1737672920793,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 21
+        },
+        {
+          "id": 1737672921296,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 23
+        },
+        {
+          "id": 1737672991901,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 25
+        },
+        {
+          "id": 1737672992431,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 27
+        },
+        {
+          "id": 1737672993070,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 29
+        },
+        {
+          "id": 1737677109889,
+          "channel": 6,
+          "volume": 10,
+          "frequency": 31
+        }
+      ]
+    },
+    {
+      "id": 1737672704670,
+      "name": "Crash",
+      "tones": [
+        {
+          "id": 1737673036884,
+          "channel": 12,
+          "volume": 15,
+          "frequency": 1
+        },
+        {
+          "id": 1737677563214,
+          "channel": 12,
+          "volume": 15,
+          "frequency": 3
+        },
+        {
+          "id": 1737677563849,
+          "channel": 12,
+          "volume": 15,
+          "frequency": 5
+        },
+        {
+          "id": 1737677564937,
+          "channel": 12,
+          "volume": 15,
+          "frequency": 7
+        },
+        {
+          "id": 1737677565617,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 9
+        },
+        {
+          "id": 1737677566696,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 11
+        },
+        {
+          "id": 1737677567707,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 13
+        },
+        {
+          "id": 1737677568657,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 15
+        },
+        {
+          "id": 1737677569668,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 17
+        },
+        {
+          "id": 1737677570169,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 19
+        },
+        {
+          "id": 1737677570650,
+          "channel": 12,
+          "volume": 12,
+          "frequency": 21
+        },
+        {
+          "id": 1737677596575,
+          "channel": 12,
+          "volume": 9,
+          "frequency": 23
+        },
+        {
+          "id": 1737677598333,
+          "channel": 12,
+          "volume": 9,
+          "frequency": 25
+        },
+        {
+          "id": 1737677599281,
+          "channel": 12,
+          "volume": 9,
+          "frequency": 27
+        },
+        {
+          "id": 1737677600149,
+          "channel": 12,
+          "volume": 9,
+          "frequency": 29
+        },
+        {
+          "id": 1737677600565,
+          "channel": 12,
+          "volume": 9,
+          "frequency": 31
+        }
+      ]
+    },
+    {
+      "id": 1737677363801,
+      "name": "Roll",
+      "tones": []
+    },
+    {
+      "id": 1737677934073,
+      "name": "GameOver",
+      "tones": []
+    }
+  ]
+}
