@@ -1,10 +1,24 @@
 
-	processor 6502
-        include "vcs.h"
-        include "macro.h"
-        include "xmacro.h"
+    processor 6502
+    include "vcs.h"
+    include "macro.h"
+    include "xmacro.h"
 
 SpriteHeight	equ 13*2
+
+MaxVelocity equ #06
+RunningThreshold equ #04
+
+StandingState   equ #00
+WalkingState    equ #01
+RunningState    equ #02
+BrakingState    equ #03
+RollingState    equ #04
+StunnedState    equ #05
+
+StunAmountTime equ #96
+
+ringColor equ #$1A
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -33,9 +47,6 @@ XVel2       .byte
 YVel1       .byte
 YVel2       .byte
 
-MaxVelocity equ #06
-RunningThreshold equ #04
-
 ;Which direction the player is moving.
 ;0 = Left, Up
 ;1 = Right, Down
@@ -60,13 +71,6 @@ FaceRight2   .byte
 PlayerState1 .byte
 PlayerState2 .byte
 
-StandingState   equ #00
-WalkingState    equ #01
-RunningState    equ #02
-BrakingState    equ #03
-RollingState    equ #04
-StunnedState    equ #05
-
 ;Boolean for whether or not the player is braking
 Player1Braking .byte
 Player2Braking .byte
@@ -74,8 +78,6 @@ Player2Braking .byte
 ;Timer used for the stunned state
 Player1StunnedTimer .byte
 Player2StunnedTimer .byte
-
-StunAmountTime equ #96
 
 ;This points at the current sprite being drawn
 spritePtr1 .word
@@ -106,7 +108,6 @@ counter .byte
 ringX .byte      ; X position of ring
 ringY .byte      ; Y position of ring
 ringY1 .byte
-ringColor equ #$1A
 
 ;Random number seeds
 RandomSeed .byte
@@ -1612,160 +1613,14 @@ FlipPlayerSprite subroutine
 
 
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Update Player Positions
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePosition subroutine
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Set the horizontal screen position of the correct player
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    lda XPos1,y
-    ldx #0
-    jsr SetHorizPos
-    lda XPos1,y
-    ldx #1
-    jsr SetHorizPos
-    
-    ;Set the ring position
-    lda ringX
-    ldx #4
-    jsr SetHorizPos
-
-    sta WSYNC	; sync w/ scanline
-    sta HMOVE	; apply fine offsets
-
+    jsr UpdatePosition
 
     
     TIMER_WAIT
 
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; 192 lines of frame
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    ;Draw the score board for 10 lines
-    ; First, we'll draw the scoreboard.
-    ; Put the playfield into score mode (bit 2) which gives
-    ; two different colors for the left/right side of
-    ; the playfield (given by COLUP0 and COLUP1).
-    lda #%00100010	; score mode + 2 pixel ball
-    sta CTRLPF
-    lda #$94
-    sta COLUP0	; set color for left
-    lda #$2c
-    sta COLUP1	; set color for right
-    ; Now we draw all four digits.
-	ldy #0		; Y will contain the frame Y coordinate
-ScanLoop1a
-    sta WSYNC
-    tya
-    lsr		; divide Y by two for double-height lines
-    tax		; -> X
-    lda FontBuf+0,x
-    sta PF1		; set left score bitmap
-    SLEEP 28
-    lda FontBuf+5,x
-    sta PF1		; set right score bitmap
-    iny
-    cpy #10
-    bcc ScanLoop1a
-
-    ; Clear the playfield
-    lda #0
-    sta WSYNC
-    sta PF1
-    ; Turn playfield reflection off (and turn score mode off)
-    lda #%00100100	; no reflection + ball priority + 2 pixel ball
-    sta CTRLPF
-
-
-
-
-    ;Which player is being drawn this frame?
-    lda counter
-    and #$01
-    beq DrawP1
-
-    ;load the Tails coordinate
-    lda YPos2
-    sta Temp
-    jmp DrawPlayer
-
-DrawP1
-    ;load the sonic coordinate
-    lda YPos1
-    sta Temp
-
-DrawPlayer subroutine
-    ldx #182	; X = 192 scanlines
-.LVScan
-    txa		; X -> A
-    sec		; set carry for subtract
-    sbc Temp	; local coordinate
-    cmp #SpriteHeight ; in sprite?
-    bcc .InSprite	; yes, skip over next
-    lda #0		; not in sprite, load 0
-.InSprite
-    lsr        ; Shift right (divide by 2)
-    ;lsr        ; Shift right again (divide by 4)
-    tay		; local coord -> Y
-
-    lda (spritePtr1),y	; lookup color
-    sta WSYNC	; sync w/ scanline
-    sta GRP0	; store bitmap
-    lda (spriteColorPtr1),y ; lookup color
-    sta COLUP0	; store color
-
-    lda (spritePtr2),y	; lookup color
-    sta GRP1	; store bitmap
-    lda (spriteColorPtr2),y ; lookup color
-    sta COLUP1	; store color
-
-    ;Skip to the next line and draw the ring
-    sta WSYNC
-
-    ;Dont draw the ring if game over
-    lda GameTimer
-    beq .SkipRing
     
-    ;Are we drawing the ring?
-    txa
-    cmp ringY1
-    bcc .drawRingBottom
 
-    jmp .SkipRing
-    
-.drawRingBottom
-
-    ;draw the ball
-    cmp ringY
-    bcc .SkipRing
-    lda #02
-    sta ENABL
-
-    jmp .DoneRing
-
-.SkipRing
-    lda #00
-    sta ENABL
-   
-.DoneRing
-
-    dex		; decrement X
-    dex
-    bne .LVScan	; repeat until 192 lines
-
-
+    jsr LinesOfFrame
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1789,32 +1644,150 @@ OverScan
 
 
 
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; SetHorizPos routine
-    ; A = X coordinate of the object
-    ; X = index of the desired object:
-    ;  0: player 1
-    ;  1: player 2
-    ;  2: missile 1
-    ;  3: missile 2
-    ;  4: ball
+    ; Initialize all the variables to their default values
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-SetHorizPos subroutine
-    sta WSYNC ; start a new line
-    sec ; set carry flag
-.DivideLoop
-    sbc #15 ; subtract 15
-    bcs .DivideLoop ; branch until negative
-    eor #7 ; calculate fine offset
-    asl
-    asl
-    asl
-    asl
-    sta RESP0,x ; fix coarse position
-    sta HMP0,x ; set fine offset
-    rts ; return to caller
+InitializeVariables subroutine
+    ; set to quad
+    lda #5
+    sta NUSIZ0
+    sta NUSIZ1
+
+    ;set the background art
+    lda #%00000000
+    sta PF0
+    sta PF1
+    sta PF2
+
+    ;set the background color
+    lda #$08
+    sta COLUBK
+
+    lda #%00010101 ; make missiles 2x-wide and set player sprites to double
+    ;lda #%00011111 ; make missiles 2x-wide and set player sprites to quad
+     ;lda #$20 ; make missiles 4x-wide
+    sta NUSIZ0
+    sta NUSIZ1
+
+    ;lda #%00110000 ;set ball 8x-wide
+    lda #%00100000 ;set ball 4x-wide
+    sta CTRLPF
+
+    ;set the ball color
+    lda ringColor
+    sta COLUPF
+
+    ;set both players to the center horizontally
+    lda #72
+    sta YPos1
+    sta YPos2
+
+    ;set the player 1 x position, right side of screen
+    lda #9
+    sta XPos1
+
+    ;set the player 2 x position, left side of screen
+    lda #147
+    sta XPos2
+    
+    ;initialize all the velocities
+    lda #0
+    sta XVel1
+    sta XVel2
+    sta YVel1
+    sta YVel2
+
+    ;initialize which direction the player is moving on each axis
+    sta YDirDown1
+    sta YDirDown2
+
+    ;Set the states of the players
+    sta PlayerState1
+    sta PlayerState2
+    sta Player1Braking
+    sta Player2Braking
+
+    ;set the stunned timers
+    sta Player1StunnedTimer
+    sta Player2StunnedTimer
+
+    ;make both players face right and move in the correct directions
+    lda #1
+    sta FaceRight1
+    sta XDirRight1
+    lda #0
+    sta FaceRight2
+    sta XDirRight2
+
+    ;reset the counters
+    lda #0
+    sta counter
+
+    ;reset the pointers
+    sta spritePtr1
+    sta spritePtr1+1
+    sta spritePtr2
+    sta spritePtr2+1
+    sta spriteColorPtr1
+    sta spriteColorPtr1+1
+    sta spriteColorPtr2
+    sta spriteColorPtr2+1
+
+    ;set all the animation variables
+    sta currentAnimationTime
+    sta currentAnimationFrame
+    lda #30
+    sta animationTiming
+    lda #1
+    sta numAnimationFrames
+
+    ; seed the random number generator
+    lda INTIM       ; unknown value
+    sta RandomSeed       ; use as seed
+    
+    lda #0 
+    sta Temp
+
+    ;set the initial ring position
+    jsr RandomizeRingPosition
+
+    ;set the game to not playing
+    lda #0
+    sta GameTimer
+
+    sta Player1Score
+    sta Player2Score
+
+    rts
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; The player hit the reset switch, start a game
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+StartGame subroutine
+    ;initialize all the variables to their defaults
+    jsr InitializeVariables
+
+    ;set the background color
+    lda #$01
+    sta COLUBK
+
+    ;Randomize the ring position
+    jsr RandomizeRingPosition
+
+    ;start the timer
+    lda #90
+    sta GameTimer
+
+    rts
+
 
 
 
@@ -2059,148 +2032,6 @@ CrashPlayers subroutine
 
 
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Initialize all the variables to their default values
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-InitializeVariables subroutine
-    ; set to quad
-    lda #5
-    sta NUSIZ0
-    sta NUSIZ1
-
-    ;set the background art
-    lda #%00000000
-    sta PF0
-    sta PF1
-    sta PF2
-
-    ;set the background color
-    lda #$08
-    sta COLUBK
-
-    lda #%00010101 ; make missiles 2x-wide and set player sprites to double
-    ;lda #%00011111 ; make missiles 2x-wide and set player sprites to quad
-     ;lda #$20 ; make missiles 4x-wide
-    sta NUSIZ0
-    sta NUSIZ1
-
-    ;lda #%00110000 ;set ball 8x-wide
-    lda #%00100000 ;set ball 4x-wide
-    sta CTRLPF
-
-    ;set the ball color
-    lda ringColor
-    sta COLUPF
-
-    ;set both players to the center horizontally
-    lda #72
-    sta YPos1
-    sta YPos2
-
-    ;set the player 1 x position, right side of screen
-    lda #9
-    sta XPos1
-
-    ;set the player 2 x position, left side of screen
-    lda #147
-    sta XPos2
-    
-    ;initialize all the velocities
-    lda #0
-    sta XVel1
-    sta XVel2
-    sta YVel1
-    sta YVel2
-
-    ;initialize which direction the player is moving on each axis
-    sta YDirDown1
-    sta YDirDown2
-
-    ;Set the states of the players
-    sta PlayerState1
-    sta PlayerState2
-    sta Player1Braking
-    sta Player2Braking
-
-    ;set the stunned timers
-    sta Player1StunnedTimer
-    sta Player2StunnedTimer
-
-    ;make both players face right and move in the correct directions
-    lda #1
-    sta FaceRight1
-    sta XDirRight1
-    lda #0
-    sta FaceRight2
-    sta XDirRight2
-
-    ;reset the counters
-    lda #0
-    sta counter
-
-    ;reset the pointers
-    sta spritePtr1
-    sta spritePtr1+1
-    sta spritePtr2
-    sta spritePtr2+1
-    sta spriteColorPtr1
-    sta spriteColorPtr1+1
-    sta spriteColorPtr2
-    sta spriteColorPtr2+1
-
-    ;set all the animation variables
-    sta currentAnimationTime
-    sta currentAnimationFrame
-    lda #30
-    sta animationTiming
-    lda #1
-    sta numAnimationFrames
-
-    ; seed the random number generator
-    lda INTIM       ; unknown value
-    sta RandomSeed       ; use as seed
-    
-    lda #0 
-    sta Temp
-
-    ;set the initial ring position
-    jsr RandomizeRingPosition
-
-    ;set the game to not playing
-    lda #0
-    sta GameTimer
-
-    sta Player1Score
-    sta Player2Score
-
-    rts
-
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; The player hit the reset switch, start a game
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-StartGame subroutine
-    ;initialize all the variables to their defaults
-    jsr InitializeVariables
-
-    ;set the background color
-    lda #$01
-    sta COLUBK
-
-    ;Randomize the ring position
-    jsr RandomizeRingPosition
-
-    ;start the timer
-    lda #90
-    sta GameTimer
-
-    rts
-
 
 
 
@@ -2215,11 +2046,12 @@ SetCharacter subroutine
 
 
 
+
 ; Fetches bitmap data for two digits of a
 ; BCD-encoded number, storing it in addresses
 ; FontBuf+x to FontBuf+4+x.
 GetBCDBitmap subroutine
-; First fetch the bytes for the 1st digit
+    ; First fetch the bytes for the 1st digit
     pha		; save original BCD number
     and #$0F	; mask out the least significant digit
     sta Temp
@@ -2237,7 +2069,7 @@ GetBCDBitmap subroutine
     inx
     dec Temp
     bne .loop1
-; Now do the 2nd digit
+    ; Now do the 2nd digit
     pla		; restore original BCD number
     lsr
     lsr
@@ -2266,6 +2098,21 @@ GetBCDBitmap subroutine
     bne .loop2
     rts
 
+
+
+
+; Bitmap pattern for digits
+DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
+        .byte $EE,$AA,$AA,$AA,$EE
+        .byte $22,$22,$22,$22,$22
+        .byte $EE,$22,$EE,$88,$EE
+        .byte $EE,$22,$66,$22,$EE
+        .byte $AA,$AA,$EE,$22,$22
+        .byte $EE,$88,$EE,$22,$EE
+        .byte $EE,$88,$EE,$AA,$EE
+        .byte $EE,$22,$22,$22,$22
+        .byte $EE,$AA,$EE,$AA,$EE
+        .byte $EE,$AA,$EE,$22,$EE
 
 
 
@@ -2305,18 +2152,264 @@ GetBCDBitmap subroutine
 ;===============================================================================
         include sfx.asm
 
-; Bitmap pattern for digits
-DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
-        .byte $EE,$AA,$AA,$AA,$EE
-        .byte $22,$22,$22,$22,$22
-        .byte $EE,$22,$EE,$88,$EE
-        .byte $EE,$22,$66,$22,$EE
-        .byte $AA,$AA,$EE,$22,$22
-        .byte $EE,$88,$EE,$22,$EE
-        .byte $EE,$88,$EE,$AA,$EE
-        .byte $EE,$22,$22,$22,$22
-        .byte $EE,$AA,$EE,$AA,$EE
-        .byte $EE,$AA,$EE,$22,$EE
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Update Player Positions
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePosition subroutine
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Set the horizontal screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    lda XPos1,y
+    ldx #0
+    jsr SetHorizPos
+    lda XPos1,y
+    ldx #1
+    jsr SetHorizPos
+    
+    ;Set the ring position
+    lda ringX
+    ldx #4
+    jsr SetHorizPos
+
+    sta WSYNC	; sync w/ scanline
+    sta HMOVE	; apply fine offsets
+
+    rts
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; SetHorizPos routine
+    ; A = X coordinate of the object
+    ; X = index of the desired object:
+    ;  0: player 1
+    ;  1: player 2
+    ;  2: missile 1
+    ;  3: missile 2
+    ;  4: ball
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SetHorizPos subroutine
+    sta WSYNC ; start a new line
+    sec ; set carry flag
+.DivideLoop
+    sbc #15 ; subtract 15
+    bcs .DivideLoop ; branch until negative
+    eor #7 ; calculate fine offset
+    asl
+    asl
+    asl
+    asl
+    sta RESP0,x ; fix coarse position
+    sta HMP0,x ; set fine offset
+    rts ; return to caller
+
+
+
+
+    
+
+
+
+;TODO: bank switch here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; 192 lines of frame
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinesOfFrame
+    ;Draw the score board for 10 lines
+    ; First, we'll draw the scoreboard.
+    ; Put the playfield into score mode (bit 2) which gives
+    ; two different colors for the left/right side of
+    ; the playfield (given by COLUP0 and COLUP1).
+    lda #%00100010	; score mode + 2 pixel ball
+    sta CTRLPF
+    lda #$94
+    sta COLUP0	; set color for left
+    lda #$2c
+    sta COLUP1	; set color for right
+    ; Now we draw all four digits.
+	ldy #0		; Y will contain the frame Y coordinate
+ScanLoop1a
+    sta WSYNC
+    tya
+    lsr		; divide Y by two for double-height lines
+    tax		; -> X
+    lda FontBuf+0,x
+    sta PF1		; set left score bitmap
+    SLEEP 28
+    lda FontBuf+5,x
+    sta PF1		; set right score bitmap
+    iny
+    cpy #10
+    bcc ScanLoop1a
+
+    ; Clear the playfield
+    lda #0
+    sta WSYNC
+    sta PF1
+    ; Turn playfield reflection off (and turn score mode off)
+    lda #%00100100	; no reflection + ball priority + 2 pixel ball
+    sta CTRLPF
+
+
+
+
+    ;Which player is being drawn this frame?
+    lda counter
+    and #$01
+    beq DrawP1
+
+    ;load the Tails coordinate
+    lda YPos2
+    sta Temp
+    jmp DrawPlayer
+
+DrawP1
+    ;load the sonic coordinate
+    lda YPos1
+    sta Temp
+
+DrawPlayer subroutine
+    ldx #182	; X = 192 scanlines
+.LVScan
+    txa		; X -> A
+    sec		; set carry for subtract
+    sbc Temp	; local coordinate
+    cmp #SpriteHeight ; in sprite?
+    bcc .InSprite	; yes, skip over next
+    lda #0		; not in sprite, load 0
+.InSprite
+    lsr        ; Shift right (divide by 2)
+    ;lsr        ; Shift right again (divide by 4)
+    tay		; local coord -> Y
+
+    lda (spritePtr1),y	; lookup color
+    sta WSYNC	; sync w/ scanline
+    sta GRP0	; store bitmap
+    lda (spriteColorPtr1),y ; lookup color
+    sta COLUP0	; store color
+
+    lda (spritePtr2),y	; lookup color
+    sta GRP1	; store bitmap
+    lda (spriteColorPtr2),y ; lookup color
+    sta COLUP1	; store color
+
+    ;Skip to the next line and draw the ring
+    sta WSYNC
+
+    ;Dont draw the ring if game over
+    lda GameTimer
+    beq .SkipRing
+    
+    ;Are we drawing the ring?
+    txa
+    cmp ringY1
+    bcc .drawRingBottom
+
+    jmp .SkipRing
+    
+.drawRingBottom
+
+    ;draw the ball
+    cmp ringY
+    bcc .SkipRing
+    lda #02
+    sta ENABL
+
+    jmp .DoneRing
+
+.SkipRing
+    lda #00
+    sta ENABL
+   
+.DoneRing
+
+    dex		; decrement X
+    dex
+    bne .LVScan	; repeat until 192 lines
+
+    rts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
