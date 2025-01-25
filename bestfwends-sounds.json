@@ -324,6 +324,30 @@
                     "frequency": 19
                 }
             ]
+        },
+        {
+            "id": 1737687692984,
+            "name": "Walk",
+            "tones": [
+                {
+                    "id": 1737687698541,
+                    "channel": 8,
+                    "volume": 7,
+                    "frequency": 19
+                }
+            ]
+        },
+        {
+            "id": 1737687692984,
+            "name": "Run",
+            "tones": [
+                {
+                    "id": 1737687698541,
+                    "channel": 8,
+                    "volume": 7,
+                    "frequency": 19
+                }
+            ]
         }
     ]
 }

@@ -4,6 +4,8 @@ SFX_F:
     .byte 0, 29, 27, 25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1 ; Crash
     .byte 0, 11, 9, 7, 5, 3, 1 ; Roll
     .byte 0, 19 ; Brake
+    .byte 0, 19 ; Walk
+    .byte 0, 19 ; Run
 
 ; calculate size of SFX_F table and validate size
 SFX_Fcount = * -SFX_F
@@ -22,6 +24,10 @@ sfxCRASH = *-SFX_CV-1
 sfxROLL = *-SFX_CV-1
     .byte 0,$87 ; Brake
 sfxBRAKE = *-SFX_CV-1
+    .byte 0,$87 ; Walk
+sfxWALK = *-SFX_CV-1
+    .byte 0,$87 ; Run
+sfxRUN = *-SFX_CV-1
 
 ; calculate size of SFX_CV table and validate size
 SFX_CVcount = *-SFX_CV

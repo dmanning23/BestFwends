@@ -4,6 +4,12 @@
     include "macro.h"
     include "xmacro.h"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Constants segment
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 SpriteHeight	equ 13*2
 
 MaxVelocity equ #06
@@ -141,10 +147,61 @@ SFX_RIGHT:      ds 1    ; stored in $B2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    seg Code
-    org $f000
+; Macro that implements Bank Switching trampoline
+; X = bank number
+; A = hi byte of destination PC
+; Y = lo byte of destination PC
+    MAC BANK_SWITCH_TRAMPOLINE
+        pha             ; push hi byte
+        tya             ; Y -> A
+        pha             ; push lo byte
+        lda $1FF8,x     ; do the bank switch
+        rts             ; return to target
+    ENDM
 
+; Macro that performs bank switch
+    MAC BANK_SWITCH
+.Bank   SET {1}
+.Addr   SET {2}
+        lda #>(.Addr-1)
+        ldy #<(.Addr-1)
+        ldx #.Bank
+        jmp BankSwitch
+    ENDM
+
+; Bank prologue that handles reset
+; no matter which bank is selected at powerup
+; it switches to bank 0 and jumps to Reset_0
+    MAC BANK_PROLOGUE
+        lda #>(Reset_0-1)
+        ldy #<(Reset_0-1)
+        ldx #$ff
+        txs		; set up stack pointer
+        inx		; X = 0
+    ENDM
+
+; Bank epilogue -- 6502 vectors
+    MAC BANK_VECTORS
+        .word Start      ; NMI
+        .word Start      ; RESET
+        .word Start	 ; BRK
+    ENDM
+
+    seg Code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; BANK 0
+
+    org  $1000
+    rorg $F000
+;----The following code is the same on both banks----
 Start
+    BANK_PROLOGUE
+BankSwitch
+    BANK_SWITCH_TRAMPOLINE
+;----End of bank-identical code----
+
+Reset_0
     CLEAN_START
     
     jsr InitializeVariables
@@ -746,8 +803,8 @@ CheckIsBraking
     sta PlayerState1,y
 
     ;Play the braking sound effect
-    ldy #sfxBRAKE     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
+    ldy #sfxBRAKE
+    jsr SFX_TRIGGER
 
     ;reset the y register
     jsr SetCharacter
@@ -1228,399 +1285,17 @@ AddVelocityToPosition subroutine
 
 SkipToHereIfGameOver
 
-
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; set the player sprite
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePlayerSprite subroutine
-
-    ;Check which state the player is in
-    lda PlayerState1,y
-    cmp RunningState
-    beq UpdateRunningSprite
-
-    cmp WalkingState
-    beq UpdateWalkingSprite
-
-    cmp BrakingState
-    beq UpdateBrakingSprite
-
-    cmp RollingState
-    beq .rollingSprite
-
-    cmp StunnedState
-    beq .stunnedSprite
-
-    jmp UpdateStandingSprite
-
-;We hit the page limit for doing beq
-.rollingSprite
-    jmp UpdateRollingSprite
-
-.stunnedSprite
-    jmp UpdateStunnedSprite
-
-UpdateRunningSprite subroutine
-
-    ;are we setting sonic or tails?
-    cpy #0
-    beq .sonic
-
-    ;Set the first player sprite to the Tails animation
-    ldx #0
-    lda #<TailsRunning11
-    sta spritePtr1,x
-    inx
-    lda #>TailsRunning11
-    sta spritePtr1,x
-
-    ;set the animation variables
-    lda TailsRunningSpeed
-    sta animationTiming
-    lda TailsRunningFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ;Set the first player sprite to the Sonic animation
-    ldx #0
-    lda #<SonicRunning11
-    sta spritePtr1,x
-    inx
-    lda #>SonicRunning11
-    sta spritePtr1,x
-
-    ;set the animation variables
-    lda SonicRunningSpeed
-    sta animationTiming
-    lda SonicRunningFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-UpdateWalkingSprite subroutine
-
-    cpy #0
-    beq .sonic
-
-    ldx #0
-    lda #<TailsWalking11
-    sta spritePtr1,x
-    inx
-    lda #>TailsWalking11
-    sta spritePtr1,x
-
-    lda TailsWalkingSpeed
-    sta animationTiming
-    lda TailsWalkingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ldx #0
-    lda #<SonicWalking11
-    sta spritePtr1,x
-    inx
-    lda #>SonicWalking11
-    sta spritePtr1,x
-
-    lda SonicWalkingSpeed
-    sta animationTiming
-    lda SonicWalkingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-UpdateBrakingSprite subroutine
-
-    cpy #0
-    beq .sonic
-
-    ldx #0
-    lda #<TailsBraking11
-    sta spritePtr1,x
-    inx
-    lda #>TailsBraking11
-    sta spritePtr1,x
-
-    lda TailsBrakingSpeed
-    sta animationTiming
-    lda TailsBrakingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ldx #0
-    lda #<SonicBraking11
-    sta spritePtr1,x
-    inx
-    lda #>SonicBraking11
-    sta spritePtr1,x
-
-    lda SonicBrakingSpeed
-    sta animationTiming
-    lda SonicBrakingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-UpdateRollingSprite subroutine
-
-    cpy #0
-    beq .sonic
-
-    ldx #0
-    lda #<TailsBall11
-    sta spritePtr1,x
-    inx
-    lda #>TailsBall11
-    sta spritePtr1,x
-
-    lda TailsBallSpeed
-    sta animationTiming
-    lda TailsBallFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ldx #0
-    lda #<SonicBall11
-    sta spritePtr1,x
-    inx
-    lda #>SonicBall11
-    sta spritePtr1,x
-
-    lda SonicBallSpeed
-    sta animationTiming
-    lda SonicBallFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-UpdateStunnedSprite subroutine
-
-    cpy #0
-    beq .sonic
-
-    ldx #0
-    lda #<TailsStunned11
-    sta spritePtr1,x
-    inx
-    lda #>TailsStunned11
-    sta spritePtr1,x
-
-    lda TailsStunnedSpeed
-    sta animationTiming
-    lda TailsStunnedFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ldx #0
-    lda #<SonicStunned11
-    sta spritePtr1,x
-    inx
-    lda #>SonicStunned11
-    sta spritePtr1,x
-
-    lda SonicStunnedSpeed
-    sta animationTiming
-    lda SonicStunnedFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-UpdateStandingSprite subroutine
-
-    cpy #0
-    beq .sonic
-
-    ldx #0
-    lda #<TailsStanding11
-    sta spritePtr1,x
-    inx
-    lda #>TailsStanding11
-    sta spritePtr1,x
-
-    lda TailsStandingSpeed
-    sta animationTiming
-    lda TailsStandingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-.sonic
-
-    ldx #0
-    lda #<SonicStanding11
-    sta spritePtr1,x
-    inx
-    lda #>SonicStanding11
-    sta spritePtr1,x
-
-    lda SonicStandingSpeed
-    sta animationTiming
-    lda SonicStandingFrames
-    sta numAnimationFrames
-
-    jmp DoneUpdatingPlayerSprite
-
-DoneUpdatingPlayerSprite
-
-UpdateAnimation subroutine
-
-    ;don't update the animation if the number of frames is less than 1
-    lda numAnimationFrames     ; Load number of frames
-    cmp #2                     ; Compare with 2
-    bcs .continue               ; Branch if numAnimationFrames >= 2
-    jmp .doneUpdatingAnimation ; Skip if numAnimationFrames <= 1
-
-.continue:
-
-    ;Update the animation time 
-
-    ;Increment the current animation time
-    inc currentAnimationTime
-
-    ;Check if it is time to increment the frame
-    lda currentAnimationTime ; Load currentAnimationTime into accumulator
-    cmp animationTiming ; Compare with animationTiming
-    bcc .doneUpdatingAnimationTime ; Branch if currentAnimationTime < animationTiming
-
-    ; If we get here, currentAnimationTime >= animationTiming
-    lda #0                     ; Load 0 into accumulator
-    sta currentAnimationTime   ; Reset currentAnimationTime to 0
-    inc currentAnimationFrame  ; Increment the animation frame
-
-.doneUpdatingAnimationTime
-
-    ;Update the animation frame
-
-    lda currentAnimationFrame ; Load current frame into accumulator
-    cmp numAnimationFrames ; Compare with max frames
-    ;beq .doneUpdatingAnimationFrame ; If equal, we're good
-    bcc .doneUpdatingAnimationFrame ; Branch if currentAnimationFrame < numAnimationFrames
-
-    ; If we get here, currentAnimationFrame >= numAnimationFrames
-    lda #0 ; Load 0 into accumulator
-    sta currentAnimationFrame ; Reset frame back to 0
-
-.doneUpdatingAnimationFrame:
-
-    ;Move the sprite pointer to point to the correct animation frame
-
-    lda currentAnimationFrame  ; Check if frame is 0
-    beq .doneUpdatingSpritePointer                  ; If 0, no adding needed
-
-    ldx currentAnimationFrame ; Use X as our frameCounter
     
-.addLoop:
-    clc                       ; Clear carry before addition
-    lda spritePtr1           ; Add 52 to pointer
-    adc #52
-    sta spritePtr1
-    lda spritePtr1+1         ; Add carry to high byte
-    adc #0
-    sta spritePtr1+1
-    
-    dex                      ; Decrement frameCounter
-    bne .addLoop             ; Keep going if we're not done
-
-.doneUpdatingSpritePointer
-
-.doneUpdatingAnimation
-
-    ;set up rest of the player sprites
-
-    ;Set the second player sprite
-    ldx #0
-    lda spritePtr1,x        ; Load the low byte value
-    clc                     ; Clear carry before addition
-    adc #13                 ; Add 13 to the value
-    sta spritePtr2,x
-    inx
-    lda spritePtr1,x        ; Load the high byte value
-    adc #0                  ; Add carry if it occurred from low byte addition
-    sta spritePtr2,x
-
-    ;Set the player color
-    ldx #0
-    lda spritePtr1,x        ; Load the low byte value
-    clc                     ; Clear carry before addition
-    adc #26                 ; Point at the color frame
-    sta spriteColorPtr1,x
-    inx
-    lda spritePtr1,x        ; Load the high byte value
-    adc #0                  ; Add carry if it occurred from low byte addition
-    sta spriteColorPtr1,x
-
-    ;Set the second player color
-    ldx #0
-    lda spritePtr1,x        ; Load the low byte value
-    clc                     ; Clear carry before addition
-    adc #39                 ; Point at the color frame
-    sta spriteColorPtr2,x
-    inx
-    lda spritePtr1,x        ; Load the high byte value
-    adc #0                  ; Add carry if it occurred from low byte addition
-    sta spriteColorPtr2,x
 
 
+    ; Switch to Bank 2 routine
+    BANK_SWITCH 1,UpdatePlayerSprite
 
-
-
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Flip the player sprite if necessary
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlipPlayerSprite subroutine
-
-    ;flip the player if necessary
-    lda FaceRight1,y
-    bne .FlipPlayerSpriteRight
-
-    ;Face the player to the left
-    lda #%00001000
-    sta REFP0
-    sta REFP1
-    jmp .DoneFlippingPlayerSprite
-
-.FlipPlayerSpriteRight
-    lda #0
-    sta REFP0
-    sta REFP1
-
-.DoneFlippingPlayerSprite
-
-
-
-    jsr UpdatePosition
-
-    
+FinishUnderscan
     TIMER_WAIT
 
-    
-
-    jsr LinesOfFrame
+    ; Switch to Bank 2 routine
+    BANK_SWITCH 1,LinesOfFrame
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2152,6 +1827,441 @@ DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
 ;===============================================================================
         include sfx.asm
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Bank 0 epilogue
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    org  $1FFA
+    rorg $FFFA
+    BANK_VECTORS
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; BANK 1
+
+    org  $2000
+    rorg $F000
+;----The following code is the same on both banks----
+Start
+    BANK_PROLOGUE
+BankSwitch
+    BANK_SWITCH_TRAMPOLINE
+;----End of bank-identical code----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; set the player sprite
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePlayerSprite subroutine
+
+    lda counter
+    and %00000001
+    tay
+
+    ;Check which state the player is in
+    lda PlayerState1,y
+    cmp RunningState
+    beq UpdateRunningSprite
+
+    cmp WalkingState
+    beq UpdateWalkingSprite
+
+    cmp BrakingState
+    beq UpdateBrakingSprite
+
+    cmp RollingState
+    beq .rollingSprite
+
+    cmp StunnedState
+    beq .stunnedSprite
+
+    jmp UpdateStandingSprite
+
+;We hit the page limit for doing beq
+.rollingSprite
+    jmp UpdateRollingSprite
+
+.stunnedSprite
+    jmp UpdateStunnedSprite
+
+UpdateRunningSprite subroutine
+
+    ;are we setting sonic or tails?
+    cpy #0
+    beq .sonic
+
+    ;Set the first player sprite to the Tails animation
+    ldx #0
+    lda #<TailsRunning11
+    sta spritePtr1,x
+    inx
+    lda #>TailsRunning11
+    sta spritePtr1,x
+
+    ;set the animation variables
+    lda TailsRunningSpeed
+    sta animationTiming
+    lda TailsRunningFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ;Set the first player sprite to the Sonic animation
+    ldx #0
+    lda #<SonicRunning11
+    sta spritePtr1,x
+    inx
+    lda #>SonicRunning11
+    sta spritePtr1,x
+
+    ;set the animation variables
+    lda SonicRunningSpeed
+    sta animationTiming
+    lda SonicRunningFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateWalkingSprite subroutine
+
+    cpy #0
+    beq .sonic
+
+    ldx #0
+    lda #<TailsWalking11
+    sta spritePtr1,x
+    inx
+    lda #>TailsWalking11
+    sta spritePtr1,x
+
+    lda TailsWalkingSpeed
+    sta animationTiming
+    lda TailsWalkingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ldx #0
+    lda #<SonicWalking11
+    sta spritePtr1,x
+    inx
+    lda #>SonicWalking11
+    sta spritePtr1,x
+
+    lda SonicWalkingSpeed
+    sta animationTiming
+    lda SonicWalkingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateBrakingSprite subroutine
+
+    cpy #0
+    beq .sonic
+
+    ldx #0
+    lda #<TailsBraking11
+    sta spritePtr1,x
+    inx
+    lda #>TailsBraking11
+    sta spritePtr1,x
+
+    lda TailsBrakingSpeed
+    sta animationTiming
+    lda TailsBrakingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ldx #0
+    lda #<SonicBraking11
+    sta spritePtr1,x
+    inx
+    lda #>SonicBraking11
+    sta spritePtr1,x
+
+    lda SonicBrakingSpeed
+    sta animationTiming
+    lda SonicBrakingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateRollingSprite subroutine
+
+    cpy #0
+    beq .sonic
+
+    ldx #0
+    lda #<TailsBall11
+    sta spritePtr1,x
+    inx
+    lda #>TailsBall11
+    sta spritePtr1,x
+
+    lda TailsBallSpeed
+    sta animationTiming
+    lda TailsBallFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ldx #0
+    lda #<SonicBall11
+    sta spritePtr1,x
+    inx
+    lda #>SonicBall11
+    sta spritePtr1,x
+
+    lda SonicBallSpeed
+    sta animationTiming
+    lda SonicBallFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateStunnedSprite subroutine
+
+    cpy #0
+    beq .sonic
+
+    ldx #0
+    lda #<TailsStunned11
+    sta spritePtr1,x
+    inx
+    lda #>TailsStunned11
+    sta spritePtr1,x
+
+    lda TailsStunnedSpeed
+    sta animationTiming
+    lda TailsStunnedFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ldx #0
+    lda #<SonicStunned11
+    sta spritePtr1,x
+    inx
+    lda #>SonicStunned11
+    sta spritePtr1,x
+
+    lda SonicStunnedSpeed
+    sta animationTiming
+    lda SonicStunnedFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+UpdateStandingSprite subroutine
+
+    cpy #0
+    beq .sonic
+
+    ldx #0
+    lda #<TailsStanding11
+    sta spritePtr1,x
+    inx
+    lda #>TailsStanding11
+    sta spritePtr1,x
+
+    lda TailsStandingSpeed
+    sta animationTiming
+    lda TailsStandingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+.sonic
+
+    ldx #0
+    lda #<SonicStanding11
+    sta spritePtr1,x
+    inx
+    lda #>SonicStanding11
+    sta spritePtr1,x
+
+    lda SonicStandingSpeed
+    sta animationTiming
+    lda SonicStandingFrames
+    sta numAnimationFrames
+
+    jmp DoneUpdatingPlayerSprite
+
+DoneUpdatingPlayerSprite
+
+UpdateAnimation subroutine
+
+    ;don't update the animation if the number of frames is less than 1
+    lda numAnimationFrames     ; Load number of frames
+    cmp #2                     ; Compare with 2
+    bcs .continue               ; Branch if numAnimationFrames >= 2
+    jmp .doneUpdatingAnimation ; Skip if numAnimationFrames <= 1
+
+.continue:
+
+    ;Update the animation time 
+
+    ;Increment the current animation time
+    inc currentAnimationTime
+
+    ;Check if it is time to increment the frame
+    lda currentAnimationTime ; Load currentAnimationTime into accumulator
+    cmp animationTiming ; Compare with animationTiming
+    bcc .doneUpdatingAnimationTime ; Branch if currentAnimationTime < animationTiming
+
+    ; If we get here, currentAnimationTime >= animationTiming
+    lda #0                     ; Load 0 into accumulator
+    sta currentAnimationTime   ; Reset currentAnimationTime to 0
+    inc currentAnimationFrame  ; Increment the animation frame
+
+.doneUpdatingAnimationTime
+
+    ;Update the animation frame
+
+    lda currentAnimationFrame ; Load current frame into accumulator
+    cmp numAnimationFrames ; Compare with max frames
+    ;beq .doneUpdatingAnimationFrame ; If equal, we're good
+    bcc .doneUpdatingAnimationFrame ; Branch if currentAnimationFrame < numAnimationFrames
+
+    ; If we get here, currentAnimationFrame >= numAnimationFrames
+    lda #0 ; Load 0 into accumulator
+    sta currentAnimationFrame ; Reset frame back to 0
+
+.doneUpdatingAnimationFrame:
+
+    ;Move the sprite pointer to point to the correct animation frame
+
+    lda currentAnimationFrame  ; Check if frame is 0
+    beq .doneUpdatingSpritePointer                  ; If 0, no adding needed
+
+    ldx currentAnimationFrame ; Use X as our frameCounter
+    
+.addLoop:
+    clc                       ; Clear carry before addition
+    lda spritePtr1           ; Add 52 to pointer
+    adc #52
+    sta spritePtr1
+    lda spritePtr1+1         ; Add carry to high byte
+    adc #0
+    sta spritePtr1+1
+    
+    dex                      ; Decrement frameCounter
+    bne .addLoop             ; Keep going if we're not done
+
+.doneUpdatingSpritePointer
+
+.doneUpdatingAnimation
+
+    ;set up rest of the player sprites
+
+    ;Set the second player sprite
+    ldx #0
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #13                 ; Add 13 to the value
+    sta spritePtr2,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spritePtr2,x
+
+    ;Set the player color
+    ldx #0
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #26                 ; Point at the color frame
+    sta spriteColorPtr1,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spriteColorPtr1,x
+
+    ;Set the second player color
+    ldx #0
+    lda spritePtr1,x        ; Load the low byte value
+    clc                     ; Clear carry before addition
+    adc #39                 ; Point at the color frame
+    sta spriteColorPtr2,x
+    inx
+    lda spritePtr1,x        ; Load the high byte value
+    adc #0                  ; Add carry if it occurred from low byte addition
+    sta spriteColorPtr2,x
+
+
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Flip the player sprite if necessary
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlipPlayerSprite subroutine
+
+    ;flip the player if necessary
+    lda FaceRight1,y
+    bne .FlipPlayerSpriteRight
+
+    ;Face the player to the left
+    lda #%00001000
+    sta REFP0
+    sta REFP1
+    jmp .DoneFlippingPlayerSprite
+
+.FlipPlayerSpriteRight
+    lda #0
+    sta REFP0
+    sta REFP1
+
+.DoneFlippingPlayerSprite
+
+    jsr UpdatePosition
+
+    ;switch back to bank 0
+    BANK_SWITCH 0,FinishUnderscan
 
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2215,48 +2325,6 @@ SetHorizPos subroutine
     sta RESP0,x ; fix coarse position
     sta HMP0,x ; set fine offset
     rts ; return to caller
-
-
-
-
-    
-
-
-
-;TODO: bank switch here
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2383,7 +2451,8 @@ DrawPlayer subroutine
     dex
     bne .LVScan	; repeat until 192 lines
 
-    rts
+    ;Switch back to bank0
+    BANK_SWITCH 0,OverScan
 
 
 
@@ -4601,9 +4670,9 @@ SonicStunnedFrames:
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Epilogue
+    ; Bank 1 epilogue
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	org $fffc
-        .word Start	; reset vector
-        .word Start	; BRK vector
+    org  $2FFA
+    rorg $FFFA
+    BANK_VECTORS
