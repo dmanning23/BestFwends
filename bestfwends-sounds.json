@@ -276,6 +276,24 @@
             "name": "Roll",
             "tones": [
                 {
+                    "id": 1737685883759,
+                    "channel": 3,
+                    "volume": 12,
+                    "frequency": 1
+                },
+                {
+                    "id": 1737685883760,
+                    "channel": 3,
+                    "volume": 12,
+                    "frequency": 1
+                },
+                {
+                    "id": 1737685883761,
+                    "channel": 3,
+                    "volume": 12,
+                    "frequency": 1
+                },
+                {
                     "id": 1737685883758,
                     "channel": 3,
                     "volume": 12,
@@ -310,6 +328,66 @@
                     "channel": 3,
                     "volume": 12,
                     "frequency": 11
+                },
+                {
+                    "id": 1737845802605,
+                    "channel": 3,
+                    "volume": 11,
+                    "frequency": 13
+                },
+                {
+                    "id": 1737845803320,
+                    "channel": 3,
+                    "volume": 10,
+                    "frequency": 15
+                },
+                {
+                    "id": 1737845803904,
+                    "channel": 3,
+                    "volume": 9,
+                    "frequency": 17
+                },
+                {
+                    "id": 1737845804391,
+                    "channel": 3,
+                    "volume": 8,
+                    "frequency": 19
+                },
+                {
+                    "id": 1737845805837,
+                    "channel": 3,
+                    "volume": 7,
+                    "frequency": 21
+                },
+                {
+                    "id": 1737845806375,
+                    "channel": 3,
+                    "volume": 6,
+                    "frequency": 23
+                },
+                {
+                    "id": 1737845806831,
+                    "channel": 3,
+                    "volume": 5,
+                    "frequency": 25
+                },
+                {
+                    "id": 1737845820735,
+                    "channel": 3,
+                    "volume": 4,
+                    "frequency": 27
+                },
+                {
+                    "id": 1737845822008,
+                    "channel": 3,
+                    "volume": 3,
+                    "frequency": 29
+                },
+                {
+                    "id": 1737845822655,
+                    "channel": 3,
+                    "volume": 2,
+                    "frequency": 31
                 }
             ]
         },
@@ -319,14 +397,14 @@
             "tones": [
                 {
                     "id": 1737687698541,
-                    "channel": 8,
+                    "channel": 7,
                     "volume": 7,
-                    "frequency": 19
+                    "frequency": 4
                 }
             ]
         },
         {
-            "id": 1737687692984,
+            "id": 1737687692985,
             "name": "Walk",
             "tones": [
                 {
@@ -338,14 +416,14 @@
             ]
         },
         {
-            "id": 1737687692984,
+            "id": 1737687692986,
             "name": "Run",
             "tones": [
                 {
                     "id": 1737687698541,
                     "channel": 8,
                     "volume": 7,
-                    "frequency": 19
+                    "frequency": 8
                 }
             ]
         }

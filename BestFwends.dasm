@@ -805,8 +805,6 @@ CheckIsBraking
     ;Play the braking sound effect
     ldy #sfxBRAKE
     jsr SFX_TRIGGER
-
-    ;reset the y register
     jsr SetCharacter
     
     ;finish updating state
@@ -828,6 +826,10 @@ CheckXRunning subroutine
     lda RunningState
     sta PlayerState1,y
 
+    ldy #sfxRUN
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+
     ;finish updating state
     jmp DoneUpdatingPlayerState
 
@@ -846,6 +848,10 @@ CheckYRunning subroutine
     ;set the state to "running"
     lda RunningState
     sta PlayerState1,y
+
+    ldy #sfxRUN
+    jsr SFX_TRIGGER
+    jsr SetCharacter
 
     ;finish updating state
     jmp DoneUpdatingPlayerState
@@ -866,6 +872,10 @@ CheckXWalking subroutine
     ;set the state to "walking"
     lda WalkingState
     sta PlayerState1,y
+
+    ldy #sfxWALK
+    jsr SFX_TRIGGER
+    jsr SetCharacter
 
     ;finish updating state
     jmp DoneUpdatingPlayerState
@@ -890,6 +900,10 @@ CheckYWalking subroutine
     ;set the state to "walking"
     lda WalkingState
     sta PlayerState1,y
+
+    ldy #sfxWALK
+    jsr SFX_TRIGGER
+    jsr SetCharacter
 
     ;finish updating state
     jmp DoneUpdatingPlayerState
@@ -990,10 +1004,8 @@ RunPlayerLogic subroutine
     sta PlayerState1,y
 
     ;play the rolling sound
-    ldy #sfxROLL     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
-
-    ;reset the y register
+    ldy #sfxROLL
+    jsr SFX_TRIGGER
     jsr SetCharacter
 
     ;double the player's speed
@@ -1095,10 +1107,8 @@ PlayerCollisionLogic subroutine
     
     ;play the bump sound effect
 
-    ldy #sfxBUMP     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
-
-    ;reset the y register
+    ldy #sfxBUMP
+    jsr SFX_TRIGGER
     jsr SetCharacter
     
     jmp .done
@@ -1126,10 +1136,8 @@ PlayerCollisionLogic subroutine
 
     ;play the bump sound effect
 
-    ldy #sfxBUMP     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
-
-    ;reset the y register
+    ldy #sfxBUMP
+    jsr SFX_TRIGGER
     jsr SetCharacter
 
     jmp .done
@@ -1140,10 +1148,8 @@ PlayerCollisionLogic subroutine
     jsr CrashPlayers
 
     ;play the crash sound effect
-    ldy #sfxCRASH     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
-
-    ;reset the y register
+    ldy #sfxCRASH
+    jsr SFX_TRIGGER
     jsr SetCharacter
 
 .done
@@ -1181,10 +1187,8 @@ RingCollectionLogic subroutine
 
     ;play the ring collection sound effect
 
-    ldy #sfxCOLLECT     ; select sound effect
-    jsr SFX_TRIGGER     ; and trigger it
-
-    ;reset the y register
+    ldy #sfxCOLLECT
+    jsr SFX_TRIGGER
     jsr SetCharacter
 
 .noCollision
@@ -1817,10 +1821,10 @@ DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
 ;           jsr SFX_UPDATE
 ;           ... 
 ;
-; To trigger a sound effect, load Y with the effect and call SFX_TRIGGER
+; To trigger a sound effect, load Y with the effect and call sfx_trigger
 ;
 ;           ldy #??
-;           jsr SFX_TRIGGER
+;           jsr sfx_trigger
 ;
 ; If you'd like to silence output output at any time, call SFX_OFF:
 ;           jsr SFX_OFF
