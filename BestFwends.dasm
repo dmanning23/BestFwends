@@ -141,12 +141,90 @@ SFX_RIGHT:      ds 1    ; stored in $B2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    seg Code
-    org $f000
+    ;seg Code
+    ;org $f000
 
-Start
-    CLEAN_START
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Macro that implements Bank Switching trampoline
+; X = bank number
+; A = hi byte of destination PC
+; Y = lo byte of destination PC
+	MAC BANK_SWITCH_TRAMPOLINE
+        pha             ; push hi byte
+        tya             ; Y -> A
+        pha             ; push lo byte
+        lda $1FF8,x     ; do the bank switch
+        rts             ; return to target
+        ENDM
+
+; Macro that performs bank switch
+        MAC BANK_SWITCH
+.Bank	SET {1}
+.Addr	SET {2}
+	lda #>(.Addr-1)
+        ldy #<(.Addr-1)
+        ldx #.Bank
+        jmp BankSwitch
+        ENDM
+
+; Bank prologue that handles reset
+; no matter which bank is selected at powerup
+; it switches to bank 0 and jumps to Reset_0
+	MAC BANK_PROLOGUE
+        lda #>(Reset_0-1)
+        ldy #<(Reset_0-1)
+        ldx #$ff
+        txs		; set up stack pointer
+        inx		; X = 0
+        ENDM
+
+; Bank epilogue -- 6502 vectors
+	MAC BANK_VECTORS
+	.word Start      ; NMI
+	.word Start      ; RESET
+	.word Start	 ; BRK
+        ENDM
+
+	seg Code
+
+
+
+
+
+
+
+
+
+
+
+;Start
+ ;   CLEAN_START
     
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; BANK 0
+
+	org  $1000
+	rorg $F000
+;----The following code is the same on both banks----
+Start
+	BANK_PROLOGUE
+BankSwitch
+	BANK_SWITCH_TRAMPOLINE
+;----End of bank-identical code----
+
+
+
+
+Reset_0
+	CLEAN_START
+
+
+
+
     jsr InitializeVariables
 
 NextFrame subroutine
@@ -1620,7 +1698,13 @@ FlipPlayerSprite subroutine
 
     
 
-    jsr LinesOfFrame
+    ;jsr LinesOfFrame
+
+    ; Switch to Bank 2 routine
+    BANK_SWITCH 1,LinesOfFrame
+
+
+
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2219,12 +2303,16 @@ SetHorizPos subroutine
 
 
 
-    
+
 
 
 
 ;TODO: bank switch here
 
+; Bank 0 epilogue
+	org  $1FFA
+	rorg $FFFA
+	BANK_VECTORS
 
 
 
@@ -2257,9 +2345,17 @@ SetHorizPos subroutine
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; BANK 1
 
-
-
+	org  $2000
+	rorg $F000
+;----The following code is the same on both banks----
+Start
+	BANK_PROLOGUE
+BankSwitch
+	BANK_SWITCH_TRAMPOLINE
+;----End of bank-identical code----
 
 
 
@@ -2383,32 +2479,9 @@ DrawPlayer subroutine
     dex
     bne .LVScan	; repeat until 192 lines
 
-    rts
+    ;rts
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    BANK_SWITCH 0,OverScan
 
 
 
@@ -2421,11 +2494,6 @@ DrawPlayer subroutine
     ; Graphics Data
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
 
 ;Tails Sprite Data (Height: 13)
 
@@ -4604,6 +4672,10 @@ SonicStunnedFrames:
     ; Epilogue
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	org $fffc
-        .word Start	; reset vector
-        .word Start	; BRK vector
+	;org $fffc
+   ;    .word Start	; reset vector
+    ;    .word Start	; BRK vector
+; Bank 1 epilogue
+	org  $2FFA
+	rorg $FFFA
+	BANK_VECTORS
