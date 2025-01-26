@@ -94,16 +94,20 @@ spriteColorPtr1 .word
 spriteColorPtr2 .word
 
 ;The timing of the current animation
-animationTiming .byte
+animationTiming1 .byte
+animationTiming2 .byte
 
 ;The number of frames in the current animation
-numAnimationFrames .byte
+numAnimationFrames1 .byte
+numAnimationFrames2 .byte
 
 ;The animation timer
-currentAnimationTime .byte
+currentAnimationTime1 .byte
+currentAnimationTime2 .byte
 
 ;The current animation frame
-currentAnimationFrame .byte
+currentAnimationFrame1 .byte
+currentAnimationFrame2 .byte
 
 ;This variable is used to mask the controller input to map to p1 or p2
 controllerMask  .byte 
@@ -1417,12 +1421,16 @@ InitializeVariables subroutine
     sta spriteColorPtr2+1
 
     ;set all the animation variables
-    sta currentAnimationTime
-    sta currentAnimationFrame
+    sta currentAnimationTime1
+    sta currentAnimationTime2
+    sta currentAnimationFrame1
+    sta currentAnimationFrame2
     lda #30
-    sta animationTiming
+    sta animationTiming1
+    sta animationTiming2
     lda #1
-    sta numAnimationFrames
+    sta numAnimationFrames1
+    sta numAnimationFrames2
 
     ; seed the random number generator
     lda INTIM       ; unknown value
@@ -1829,7 +1837,7 @@ DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
 ; If you'd like to silence output output at any time, call SFX_OFF:
 ;           jsr SFX_OFF
 ;===============================================================================
-        include sfx.asm
+    include "sfx.asm"
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1899,7 +1907,7 @@ UpdatePlayerSprite subroutine
     beq UpdateWalkingSprite
 
     cmp BrakingState
-    beq UpdateBrakingSprite
+    beq .brakingSprite
 
     cmp RollingState
     beq .rollingSprite
@@ -1915,6 +1923,9 @@ UpdatePlayerSprite subroutine
 
 .stunnedSprite
     jmp UpdateStunnedSprite
+
+.brakingSprite
+    jmp UpdateBrakingSprite
 
 UpdateRunningSprite subroutine
 
@@ -1932,9 +1943,9 @@ UpdateRunningSprite subroutine
 
     ;set the animation variables
     lda TailsRunningSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsRunningFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -1950,9 +1961,9 @@ UpdateRunningSprite subroutine
 
     ;set the animation variables
     lda SonicRunningSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicRunningFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -1969,9 +1980,9 @@ UpdateWalkingSprite subroutine
     sta spritePtr1,x
 
     lda TailsWalkingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsWalkingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -1985,9 +1996,9 @@ UpdateWalkingSprite subroutine
     sta spritePtr1,x
 
     lda SonicWalkingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicWalkingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2004,9 +2015,9 @@ UpdateBrakingSprite subroutine
     sta spritePtr1,x
 
     lda TailsBrakingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsBrakingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2020,9 +2031,9 @@ UpdateBrakingSprite subroutine
     sta spritePtr1,x
 
     lda SonicBrakingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicBrakingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2039,9 +2050,9 @@ UpdateRollingSprite subroutine
     sta spritePtr1,x
 
     lda TailsBallSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsBallFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2055,9 +2066,9 @@ UpdateRollingSprite subroutine
     sta spritePtr1,x
 
     lda SonicBallSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicBallFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2074,9 +2085,9 @@ UpdateStunnedSprite subroutine
     sta spritePtr1,x
 
     lda TailsStunnedSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsStunnedFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2090,9 +2101,9 @@ UpdateStunnedSprite subroutine
     sta spritePtr1,x
 
     lda SonicStunnedSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicStunnedFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2109,9 +2120,9 @@ UpdateStandingSprite subroutine
     sta spritePtr1,x
 
     lda TailsStandingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda TailsStandingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2125,9 +2136,9 @@ UpdateStandingSprite subroutine
     sta spritePtr1,x
 
     lda SonicStandingSpeed
-    sta animationTiming
+    sta animationTiming1,y
     lda SonicStandingFrames
-    sta numAnimationFrames
+    sta numAnimationFrames1,y
 
     jmp DoneUpdatingPlayerSprite
 
@@ -2136,49 +2147,56 @@ DoneUpdatingPlayerSprite
 UpdateAnimation subroutine
 
     ;don't update the animation if the number of frames is less than 1
-    lda numAnimationFrames     ; Load number of frames
+    lda numAnimationFrames1,y     ; Load number of frames
     cmp #2                     ; Compare with 2
-    bcs .continue               ; Branch if numAnimationFrames >= 2
-    jmp .doneUpdatingAnimation ; Skip if numAnimationFrames <= 1
+    bcs .continue               ; Branch if num AnimationFrames >= 2
+    jmp .doneUpdatingAnimation ; Skip if num AnimationFrames <= 1
 
 .continue:
 
     ;Update the animation time 
 
     ;Increment the current animation time
-    inc currentAnimationTime
+    lda currentAnimationTime1,y
+    clc
+    adc #1
+    sta currentAnimationTime1,y
 
     ;Check if it is time to increment the frame
-    lda currentAnimationTime ; Load currentAnimationTime into accumulator
-    cmp animationTiming ; Compare with animationTiming
-    bcc .doneUpdatingAnimationTime ; Branch if currentAnimationTime < animationTiming
+    lda currentAnimationTime1,y ; Load current AnimationTime into accumulator
+    cmp animationTiming1,y ; Compare with animationTiming
+    bcc .doneUpdatingAnimationTime ; Branch if current AnimationTime < animationTiming
 
-    ; If we get here, currentAnimationTime >= animationTiming
+    ; If we get here, current AnimationTime >= animationTiming
     lda #0                     ; Load 0 into accumulator
-    sta currentAnimationTime   ; Reset currentAnimationTime to 0
-    inc currentAnimationFrame  ; Increment the animation frame
+    sta currentAnimationTime1,y   ; Reset current AnimationTime to 0
+
+    lda currentAnimationFrame1,y
+    clc
+    adc #1
+    sta currentAnimationFrame1,y  ; Increment the animation frame
 
 .doneUpdatingAnimationTime
 
     ;Update the animation frame
 
-    lda currentAnimationFrame ; Load current frame into accumulator
-    cmp numAnimationFrames ; Compare with max frames
+    lda currentAnimationFrame1,y ; Load current frame into accumulator
+    cmp numAnimationFrames1,y ; Compare with max frames
     ;beq .doneUpdatingAnimationFrame ; If equal, we're good
-    bcc .doneUpdatingAnimationFrame ; Branch if currentAnimationFrame < numAnimationFrames
+    bcc .doneUpdatingAnimationFrame ; Branch if current AnimationFrame < num AnimationFrames
 
-    ; If we get here, currentAnimationFrame >= numAnimationFrames
+    ; If we get here, current AnimationFrame >= num AnimationFrames
     lda #0 ; Load 0 into accumulator
-    sta currentAnimationFrame ; Reset frame back to 0
+    sta currentAnimationFrame1,y ; Reset frame back to 0
 
 .doneUpdatingAnimationFrame:
 
     ;Move the sprite pointer to point to the correct animation frame
 
-    lda currentAnimationFrame  ; Check if frame is 0
+    lda currentAnimationFrame1,y  ; Check if frame is 0
     beq .doneUpdatingSpritePointer                  ; If 0, no adding needed
 
-    ldx currentAnimationFrame ; Use X as our frameCounter
+    ldx currentAnimationFrame1,y ; Use X as our frameCounter
     
 .addLoop:
     clc                       ; Clear carry before addition
