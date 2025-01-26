@@ -943,6 +943,18 @@ DoneUpdatePlayer
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunPlayerLogic subroutine
+
+    ;Check if the player is rolling, just to play the cound effect
+    lda PlayerState1,y
+    cmp RollingState
+    bne .checkRunning
+
+    ;playing the ball sound 
+    ldy #sfxROLLING
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+
+.checkRunning
     lda PlayerState1,y
     cmp RunningState
     beq .checkButton
