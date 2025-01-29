@@ -7,6 +7,7 @@ SFX_F:
     .byte 0, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1 ; Bump
     .byte 0, 29, 27, 25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1 ; Crash
     .byte 0, 31, 31, 31, 31, 31, 31, 29, 27, 25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1, 1, 1, 1 ; Roll
+    .byte 0, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ; GameOver
 
 ; calculate size of SFX_F table and validate size
 SFX_Fcount = * -SFX_F
@@ -31,6 +32,8 @@ sfxBUMP = *-SFX_CV-1
 sfxCRASH = *-SFX_CV-1
     .byte 0,$32, $33, $34, $35, $36, $37, $38, $39, $3a, $3b, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c, $3c ; Roll
 sfxROLL = *-SFX_CV-1
+    .byte 0,$7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c, $7c ; GameOver
+sfxGAMEOVER = *-SFX_CV-1
 
 ; calculate size of SFX_CV table and validate size
 SFX_CVcount = *-SFX_CV

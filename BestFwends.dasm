@@ -26,6 +26,8 @@ StunAmountTime equ #96
 
 ringColor equ #$1A
 
+gameLength equ #70
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Variables segment
@@ -1482,7 +1484,7 @@ StartGame subroutine
     jsr RandomizeRingPosition
 
     ;start the timer
-    lda #90
+    lda gameLength
     sta GameTimer
 
     rts
@@ -1654,33 +1656,33 @@ UpdateTimer subroutine
     lda GameTimer         ; get TimerPF
     bne .decrementTimer  ; if the upper nybble is not 0 then time remains
 
-    ;otherwise time ran out so end the game
+    ;Time has ended
 
     lda #$08
     sta COLUBK
 
-    ;TODO: play the game over sound effect
-    
-    ;ldy #sfxGAMEOVER     ; select sound effect
-    ;jsr SFX_TRIGGER     ; and trigger it
+    jmp .doneUpdatingTimer
 
-    rts
-
-.decrementTimer:
+.decrementTimer
     lda GameTimer
     sec ;Set carry flag
     sbc #1 ;Subtract 1
     sta GameTimer
 
-    ;TODO: play the game ending soon sound effect
+    ;Did the game end when we decremented the time?
+    beq .gameEnded
 
-    ;and #%00011111  ; check the lower 5 bits
-    ;bne .noTickSfx   ; branch if there's a value in the lower 5 bits
-    
-    ;ldy #sfxGAMEOVER     ; select sound effect
-    ;jsr SFX_TRIGGER     ; and trigger it
+    ;TODO: play the game ending soon sound effect?
 
-;.noTickSfx:
+    jmp .doneUpdatingTimer
+
+.gameEnded
+
+    ;play the game over sound effect
+    ldy #sfxGAMEOVER
+    jsr SFX_TRIGGER
+
+.doneUpdatingTimer
     rts
 
 
@@ -1849,7 +1851,7 @@ DigitsBitmap ;;{w:8,h:5,count:10,brev:1};;
 ; If you'd like to silence output output at any time, call SFX_OFF:
 ;           jsr SFX_OFF
 ;===============================================================================
-    include "sfx.asm"
+    include "bestfwends-sfx.asm"
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2372,7 +2374,7 @@ SetHorizPos subroutine
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LinesOfFrame
+LinesOfFrame subroutine
     ;Draw the score board for 10 lines
     ; First, we'll draw the scoreboard.
     ; Put the playfield into score mode (bit 2) which gives
@@ -2380,13 +2382,35 @@ LinesOfFrame
     ; the playfield (given by COLUP0 and COLUP1).
     lda #%00100010	; score mode + 2 pixel ball
     sta CTRLPF
+
+    ;check if the game is almost over
+    lda GameTimer
+    cmp #12
+    bcs .normalPlay
+
+    ;the game is almost over
+    lda GameTimer
+    and %00000001
+    beq .normalPlay
+
+    ;set the colors to black so they blink
+    lda #$9a
+    sta COLUP0
+    lda #$1c
+    sta COLUP1
+    jmp .doneCheckingAlmostGameOver
+
+.normalPlay
     lda #$94
     sta COLUP0	; set color for left
     lda #$2c
     sta COLUP1	; set color for right
+
+.doneCheckingAlmostGameOver
+
     ; Now we draw all four digits.
-	ldy #0		; Y will contain the frame Y coordinate
-ScanLoop1a
+    ldy #0		; Y will contain the frame Y coordinate
+.scanLoop1a
     sta WSYNC
     tya
     lsr		; divide Y by two for double-height lines
@@ -2398,7 +2422,7 @@ ScanLoop1a
     sta PF1		; set right score bitmap
     iny
     cpy #10
-    bcc ScanLoop1a
+    bcc .scanLoop1a
 
     ; Clear the playfield
     lda #0
