@@ -146,6 +146,11 @@ FontBuf	ds 10
 SFX_LEFT:       ds 1    ; stored in $B1
 SFX_RIGHT:      ds 1    ; stored in $B2
 
+;The selected game
+;0: 2p game
+;1: 1p game
+SelectedGame .byte
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -209,6 +214,10 @@ BankSwitch
 
 Reset_0
     CLEAN_START
+
+    ;make sure the game starts off as 2p
+    lda #0
+    sta SelectedGame
     
     jsr InitializeVariables
 
