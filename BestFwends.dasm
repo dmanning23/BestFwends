@@ -1112,7 +1112,7 @@ PlayerCollisionLogic subroutine
     ;Dont do player collision logic in 1p mode
     lda SelectedGame
     bne .done
-    
+
     jsr CheckCharCollision
     bne .collision
     jmp .done
@@ -2499,21 +2499,44 @@ LinesOfFrame subroutine
 
 
 
-
+DrawScreen subroutine
     ;Which player is being drawn this frame?
     lda counter
     and #$01
-    beq DrawP1
+    beq .drawP1
 
     ;load the Tails coordinate
     lda YPos2
     sta Temp
-    jmp DrawPlayer
 
-DrawP1
+    ;are we in 1p mode?
+    lda SelectedGame
+    beq .drawP2
+    
+    ;we are in 1p mode!
+    jsr SkipDrawingPlayer
+
+    jmp .doneDrawingPlayer
+
+.drawP2
+
+    jsr DrawPlayer
+    jmp .doneDrawingPlayer
+
+.drawP1
     ;load the sonic coordinate
     lda YPos1
     sta Temp
+
+    jsr DrawPlayer
+
+.doneDrawingPlayer
+    ;Switch back to bank0
+    BANK_SWITCH 0,OverScan
+
+
+
+
 
 DrawPlayer subroutine
     ldx #182	; X = 192 scanlines
@@ -2574,8 +2597,60 @@ DrawPlayer subroutine
     dex
     bne .LVScan	; repeat until 192 lines
 
-    ;Switch back to bank0
-    BANK_SWITCH 0,OverScan
+    rts
+
+
+
+
+SkipDrawingPlayer subroutine
+
+    ldx #182	; X = 192 scanlines
+.LVScan
+    txa		; X -> A
+    sec		; set carry for subtract
+    sbc Temp	; local coordinate
+    cmp #SpriteHeight ; in sprite?
+    bcc .InSprite	; yes, skip over next
+    lda #0		; not in sprite, load 0
+.InSprite
+    
+    sta WSYNC	; sync w/ scanline
+
+    ;Skip to the next line and draw the ring
+    sta WSYNC
+
+    ;Dont draw the ring if game over
+    lda GameTimer
+    beq .SkipRing
+    
+    ;Are we drawing the ring?
+    txa
+    cmp ringY1
+    bcc .drawRingBottom
+
+    jmp .SkipRing
+    
+.drawRingBottom
+
+    ;draw the ball
+    cmp ringY
+    bcc .SkipRing
+    lda #02
+    sta ENABL
+
+    jmp .DoneRing
+
+.SkipRing
+    lda #00
+    sta ENABL
+   
+.DoneRing
+
+    dex		; decrement X
+    dex
+    bne .LVScan	; repeat until 192 lines
+
+    rts
 
 
 
