@@ -289,6 +289,18 @@ NextFrame subroutine
 
 DontSkipForGameOver
 
+    ;Are we playing 1p mode, but updating player2?
+    lda SelectedGame
+    beq SetP1ControllerMask
+
+    ;We are playing 1p mode for sure
+    jsr SetCharacter
+    tya
+    beq SetP1ControllerMask
+
+    ;We are updating p2 and don't need to do any logic
+    jmp SkipToHereIfGameOver
+
 
 
 SetP1ControllerMask subroutine
@@ -1096,6 +1108,11 @@ RunPlayerLogic subroutine
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PlayerCollisionLogic subroutine
+
+    ;Dont do player collision logic in 1p mode
+    lda SelectedGame
+    bne .done
+    
     jsr CheckCharCollision
     bne .collision
     jmp .done
@@ -1326,7 +1343,7 @@ AddVelocityToPosition subroutine
 
 SkipToHereIfGameOver
 
-    
+
 
 
     ; Switch to Bank 2 routine
