@@ -265,13 +265,7 @@ NextFrame subroutine
     sta HMP0
     sta HMP1
 
-    ;Set up the scores
-    lda Player2Score
-    ldx #0
-    jsr GetBCDBitmap
-    lda Player1Score
-    ldx #5
-    jsr GetBCDBitmap
+    jsr SetScoreboard
 
     ;Increment the frame counter 
     inc counter
@@ -1228,6 +1222,8 @@ RingCollectionLogic subroutine
 
 .playerCollision
 
+    ;TODO: idunno why it is storing things in the wrong score
+
     ;add 1 to the current player's score
     lda Player1Score,y
     clc
@@ -1793,8 +1789,24 @@ SetCharacter subroutine
     rts
 
 
+SetScoreboard
+    lda SelectedGame
+    bne .drawP1Game
 
+    ;Set up the scores
+    lda Player2Score
+    ldx #0
+    jsr GetBCDBitmap
+    lda Player1Score
+    ldx #5
+    jsr GetBCDBitmap
+    rts
 
+.drawP1Game
+    lda Player1Score
+    ldx #0
+    jsr GetBCDBitmap
+    rts
 
 
 ; Fetches bitmap data for two digits of a
@@ -2448,7 +2460,7 @@ LinesOfFrame subroutine
 
     ;Are we drawing the p1 colors?
     lda SelectedGame
-    bne .skipP1
+    bne .skipP2
 
     lda #$1c
     sta COLUP1
@@ -2459,15 +2471,24 @@ LinesOfFrame subroutine
     sta COLUP0	; set color for left
 
     lda SelectedGame
-    bne .skipP1
+    bne .skipP2
 
     lda #$2c
     sta COLUP1	; set color for right
     jmp .doneCheckingAlmostGameOver
 
-.skipP1
+.skipP2
     ; load background color into p2
-    lda COLUBK
+    lda GameTimer
+    beq .useGrayBackground
+    
+    lda #$00
+    sta COLUP1
+    jmp .doneCheckingAlmostGameOver
+
+.useGrayBackground
+
+    lda #$08
     sta COLUP1
     jmp .doneCheckingAlmostGameOver
 
