@@ -1228,7 +1228,7 @@ RingCollectionLogic subroutine
     lda Player1Score,y
     sed ;set the decimal mode flag and switch to Binary Coded Decimal (BCD)
     clc
-    adc #5
+    adc #1
     cld ;clear the decimal mode flag
     sta Player1Score,y
 
@@ -1569,7 +1569,7 @@ RandomizeRingPosition:
     sta ringX   ; save the random X position
     
     jsr Random      ; get a random value between 0-255
-    and #183        ; limit range to 0-127
+    and #163        ; limit range to 0-127
     ;sta Temp        ; save it
     ;jsr Random      ; get a random value between 0-255
     ;and #56         ; limit range to 0-15
