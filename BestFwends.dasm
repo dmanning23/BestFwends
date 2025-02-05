@@ -1226,8 +1226,10 @@ RingCollectionLogic subroutine
 
     ;add 1 to the current player's score
     lda Player1Score,y
+    sed ;set the decimal mode flag and switch to Binary Coded Decimal (BCD)
     clc
-    adc #1
+    adc #5
+    cld ;clear the decimal mode flag
     sta Player1Score,y
 
     ;do the ring collection logic
@@ -1646,7 +1648,12 @@ BumpP1 subroutine
     lda Player2Score
     beq .skipScore
 
-    dec Player2Score
+    lda Player2Score
+    sed
+    sec
+    sbc #1
+    cld
+    sta Player2Score
 
 .skipScore
 
@@ -1677,7 +1684,12 @@ BumpP2 subroutine
     lda Player1Score
     beq .skipScore
 
-    dec Player1Score
+    lda Player1Score
+    sed
+    sec
+    sbc #1
+    cld
+    sta Player1Score
 
 .skipScore
 
