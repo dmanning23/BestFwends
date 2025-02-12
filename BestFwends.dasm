@@ -151,6 +151,8 @@ SFX_RIGHT:      ds 1    ; stored in $B2
 ;1: 1p game
 SelectedGame .byte
 
+PrevGameSelect .byte
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -226,7 +228,25 @@ NextFrame subroutine
     ;Test if the player switched game modes
     lda #$02
     bit SWCHB
-    beq .gameSelectSwitch
+    beq .switchPressed    ; Branch if switch is pressed
+
+    ; Switch not pressed - store unpressed state and exit
+    lda #$00
+    sta PrevGameSelect
+    jmp .switchNotPressed
+
+.switchPressed
+    ; Switch is pressed - check if it was already pressed
+    lda PrevGameSelect
+    bne .switchNotPressed ; If was already pressed (non-zero), skip
+
+    ; Wasn't previously pressed - store pressed state
+    lda #$01
+    sta PrevGameSelect
+    ; Handle the game select logic
+    jsr .gameSelectSwitch
+
+.switchNotPressed
 
     lsr SWCHB	; test Game Reset switch
     bcc .reset	; reset?
@@ -1497,6 +1517,8 @@ InitializeVariables subroutine
     sta Player1Score
     sta Player2Score
 
+    sta PrevGameSelect
+
     rts
 
 
@@ -1526,6 +1548,7 @@ StartGame subroutine
 
 
 ChangeGameSelection
+
     ;Make sure the current game is ended
     lda #0
     sta GameTimer
