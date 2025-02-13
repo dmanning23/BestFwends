@@ -34,31 +34,31 @@ SonicStanding12
 SonicStandingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
-  .byte $88 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 3
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicStandingColor12
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $38 ; Row 3
   .byte $88 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
+  .byte $82 ; Row 12
   .byte $00 ; Row 13
 
 SonicStandingSpeed:
@@ -102,31 +102,31 @@ SonicWalkingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicWalkingColor12
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $38 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $00 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicWalking21
   .byte %00000000 ; Row 1
@@ -161,31 +161,31 @@ SonicWalking22
 SonicWalkingColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
-  .byte $88 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 3
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicWalkingColor22
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $38 ; Row 3
   .byte $88 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
+  .byte $82 ; Row 12
   .byte $00 ; Row 13
 
 SonicWalking31
@@ -221,32 +221,32 @@ SonicWalking32
 SonicWalkingColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
-  .byte $88 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 3
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicWalkingColor32
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $38 ; Row 3
   .byte $88 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
   .byte $0E ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 13
 
 SonicWalking41
   .byte %00000000 ; Row 1
@@ -281,32 +281,32 @@ SonicWalking42
 SonicWalkingColor41
   .byte $88 ; Row 1
   .byte $38 ; Row 2
-  .byte $88 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 3
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicWalkingColor42
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $38 ; Row 3
   .byte $88 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
   .byte $0E ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 13
 
 SonicWalkingSpeed:
   .byte 3 ; Animation speed
@@ -350,29 +350,29 @@ SonicRunningColor11
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor12
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
+  .byte $82 ; Row 12
   .byte $00 ; Row 13
 
 SonicRunning21
@@ -410,29 +410,29 @@ SonicRunningColor21
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor22
   .byte $0E ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $88 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
+  .byte $82 ; Row 12
   .byte $00 ; Row 13
 
 SonicRunning31
@@ -470,29 +470,29 @@ SonicRunningColor31
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor32
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
+  .byte $82 ; Row 12
   .byte $00 ; Row 13
 
 SonicRunning41
@@ -530,30 +530,30 @@ SonicRunningColor41
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor42
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicRunning51
   .byte %00000000 ; Row 1
@@ -590,30 +590,30 @@ SonicRunningColor51
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor52
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicRunning61
   .byte %00000000 ; Row 1
@@ -650,30 +650,30 @@ SonicRunningColor61
   .byte $38 ; Row 2
   .byte $38 ; Row 3
   .byte $38 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicRunningColor62
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicRunningSpeed:
   .byte 1 ; Animation speed
@@ -715,27 +715,27 @@ SonicBall12
 SonicBallColor11
   .byte $88 ; Row 1
   .byte $88 ; Row 2
-  .byte $88 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 3
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicBallColor12
   .byte $38 ; Row 1
-  .byte $84 ; Row 2
-  .byte $84 ; Row 3
-  .byte $84 ; Row 4
-  .byte $FC ; Row 5
+  .byte $82 ; Row 2
+  .byte $82 ; Row 3
+  .byte $82 ; Row 4
+  .byte $2C ; Row 5
   .byte $0E ; Row 6
   .byte $0E ; Row 7
-  .byte $FC ; Row 8
+  .byte $2C ; Row 8
   .byte $1C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
@@ -783,31 +783,31 @@ SonicBrakingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicBrakingColor12
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicBraking21
   .byte %00000000 ; Row 1
@@ -843,31 +843,31 @@ SonicBrakingColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicBrakingColor22
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicBraking31
   .byte %00000000 ; Row 1
@@ -903,31 +903,31 @@ SonicBrakingColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicBrakingColor32
   .byte $38 ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $0E ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicBrakingSpeed:
   .byte 4 ; Animation speed
@@ -970,31 +970,31 @@ SonicStunnedColor11
   .byte $38 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicStunnedColor12
   .byte $0E ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $38 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicStunned21
   .byte %00000000 ; Row 1
@@ -1030,31 +1030,31 @@ SonicStunnedColor21
   .byte $38 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $88 ; Row 4
-  .byte $88 ; Row 5
-  .byte $88 ; Row 6
-  .byte $88 ; Row 7
-  .byte $88 ; Row 8
-  .byte $88 ; Row 9
-  .byte $88 ; Row 10
-  .byte $88 ; Row 11
-  .byte $88 ; Row 12
-  .byte $88 ; Row 13
+  .byte $96 ; Row 4
+  .byte $96 ; Row 5
+  .byte $96 ; Row 6
+  .byte $96 ; Row 7
+  .byte $96 ; Row 8
+  .byte $96 ; Row 9
+  .byte $96 ; Row 10
+  .byte $96 ; Row 11
+  .byte $96 ; Row 12
+  .byte $96 ; Row 13
 
 SonicStunnedColor22
   .byte $0E ; Row 1
   .byte $0E ; Row 2
   .byte $0E ; Row 3
   .byte $38 ; Row 4
-  .byte $FC ; Row 5
-  .byte $FC ; Row 6
-  .byte $FC ; Row 7
-  .byte $FC ; Row 8
-  .byte $1C ; Row 9
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
   .byte $C8 ; Row 10
   .byte $0E ; Row 11
-  .byte $86 ; Row 12
-  .byte $86 ; Row 13
+  .byte $82 ; Row 12
+  .byte $82 ; Row 13
 
 SonicStunnedSpeed:
   .byte 9 ; Animation speed

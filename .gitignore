@@ -1,4 +1,4 @@
 BestFwends.bin
 bin/
-sfx.asm.lst
-sfx.asm.sym
+*.asm.lst
+*.asm.sym

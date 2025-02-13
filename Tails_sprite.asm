@@ -35,16 +35,16 @@ TailsStandingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsStandingColor12
   .byte $38 ; Row 1
@@ -57,9 +57,9 @@ TailsStandingColor12
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsStandingSpeed:
   .byte 30 ; Animation speed
@@ -102,16 +102,16 @@ TailsWalkingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsWalkingColor12
   .byte $38 ; Row 1
@@ -124,9 +124,9 @@ TailsWalkingColor12
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsWalking21
   .byte %00000000 ; Row 1
@@ -162,16 +162,16 @@ TailsWalkingColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsWalkingColor22
   .byte $38 ; Row 1
@@ -184,9 +184,9 @@ TailsWalkingColor22
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsWalking31
   .byte %00000000 ; Row 1
@@ -222,16 +222,16 @@ TailsWalkingColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsWalkingColor32
   .byte $38 ; Row 1
@@ -244,9 +244,9 @@ TailsWalkingColor32
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsWalking41
   .byte %00000000 ; Row 1
@@ -282,16 +282,16 @@ TailsWalkingColor41
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsWalkingColor42
   .byte $38 ; Row 1
@@ -304,9 +304,9 @@ TailsWalkingColor42
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsWalkingSpeed:
   .byte 4 ; Animation speed
@@ -347,33 +347,33 @@ TailsBall12
 
 TailsBallColor11
   .byte $88 ; Row 1
-  .byte $2E ; Row 2
-  .byte $2E ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 2
+  .byte $2C ; Row 3
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsBallColor12
   .byte $38 ; Row 1
-  .byte $2A ; Row 2
-  .byte $2A ; Row 3
-  .byte $2A ; Row 4
-  .byte $2A ; Row 5
+  .byte $28 ; Row 2
+  .byte $28 ; Row 3
+  .byte $28 ; Row 4
+  .byte $28 ; Row 5
   .byte $0E ; Row 6
   .byte $0E ; Row 7
   .byte $1E ; Row 8
   .byte $1E ; Row 9
   .byte $1E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsBallSpeed:
   .byte 30 ; Animation speed
@@ -416,16 +416,16 @@ TailsBrakingColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsBrakingColor12
   .byte $38 ; Row 1
@@ -438,9 +438,9 @@ TailsBrakingColor12
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsBraking21
   .byte %00000000 ; Row 1
@@ -476,16 +476,16 @@ TailsBrakingColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsBrakingColor22
   .byte $38 ; Row 1
@@ -498,9 +498,9 @@ TailsBrakingColor22
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsBraking31
   .byte %00000000 ; Row 1
@@ -536,16 +536,16 @@ TailsBrakingColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsBrakingColor32
   .byte $38 ; Row 1
@@ -558,9 +558,9 @@ TailsBrakingColor32
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsBrakingSpeed:
   .byte 4 ; Animation speed
@@ -603,16 +603,16 @@ TailsRunningColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor12
   .byte $38 ; Row 1
@@ -625,9 +625,9 @@ TailsRunningColor12
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunning21
   .byte %00000000 ; Row 1
@@ -663,16 +663,16 @@ TailsRunningColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor22
   .byte $38 ; Row 1
@@ -685,9 +685,9 @@ TailsRunningColor22
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunning31
   .byte %00000000 ; Row 1
@@ -723,16 +723,16 @@ TailsRunningColor31
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor32
   .byte $38 ; Row 1
@@ -745,9 +745,9 @@ TailsRunningColor32
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunning41
   .byte %00000000 ; Row 1
@@ -783,16 +783,16 @@ TailsRunningColor41
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor42
   .byte $38 ; Row 1
@@ -805,9 +805,9 @@ TailsRunningColor42
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunning51
   .byte %00000000 ; Row 1
@@ -843,16 +843,16 @@ TailsRunningColor51
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor52
   .byte $38 ; Row 1
@@ -865,9 +865,9 @@ TailsRunningColor52
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunning61
   .byte %00000000 ; Row 1
@@ -903,16 +903,16 @@ TailsRunningColor61
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsRunningColor62
   .byte $38 ; Row 1
@@ -925,9 +925,9 @@ TailsRunningColor62
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsRunningSpeed:
   .byte 2 ; Animation speed
@@ -970,16 +970,16 @@ TailsStunnedColor11
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsStunnedColor12
   .byte $38 ; Row 1
@@ -992,9 +992,9 @@ TailsStunnedColor12
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsStunned21
   .byte %00000000 ; Row 1
@@ -1030,16 +1030,16 @@ TailsStunnedColor21
   .byte $88 ; Row 1
   .byte $38 ; Row 2
   .byte $38 ; Row 3
-  .byte $2E ; Row 4
-  .byte $2E ; Row 5
-  .byte $2E ; Row 6
-  .byte $2E ; Row 7
-  .byte $2E ; Row 8
-  .byte $2E ; Row 9
-  .byte $2E ; Row 10
-  .byte $2E ; Row 11
-  .byte $2E ; Row 12
-  .byte $2E ; Row 13
+  .byte $2C ; Row 4
+  .byte $2C ; Row 5
+  .byte $2C ; Row 6
+  .byte $2C ; Row 7
+  .byte $2C ; Row 8
+  .byte $2C ; Row 9
+  .byte $2C ; Row 10
+  .byte $2C ; Row 11
+  .byte $2C ; Row 12
+  .byte $2C ; Row 13
 
 TailsStunnedColor22
   .byte $38 ; Row 1
@@ -1052,9 +1052,9 @@ TailsStunnedColor22
   .byte $0E ; Row 8
   .byte $8A ; Row 9
   .byte $0E ; Row 10
-  .byte $2A ; Row 11
-  .byte $2A ; Row 12
-  .byte $2A ; Row 13
+  .byte $28 ; Row 11
+  .byte $28 ; Row 12
+  .byte $28 ; Row 13
 
 TailsStunnedSpeed:
   .byte 9 ; Animation speed
