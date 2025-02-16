@@ -1132,246 +1132,8 @@ RunPlayerLogic subroutine
 
 
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Check if the players are colliding and run the player collision logic
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-PlayerCollisionLogic subroutine
 
-    ;Dont do player collision logic in 1p mode
-    lda SelectedGame
-    bne .done
 
-    jsr CheckCharCollision
-    bne .collision
-    jmp .done
-
-.collision
-
-    ;so much collision logic
-
-    ;check if p1 is spinning
-    lda PlayerState1
-    cmp RollingState
-    beq .p1IsSpinning
-
-    ;player 1 is not spinning
-    lda PlayerState2
-    cmp RollingState
-    beq .p2IsSpinning
-
-    ;neither player is spinning, nothing else to check
-    jmp .done
-
-.p1IsSpinning
-
-    ;p1 is spinning
-
-    ;Check if p2 is spinning
-    lda PlayerState2
-    cmp RollingState
-    beq .clash
-
-    ;Is player 2 stunned?
-    cmp StunnedState
-    beq .done
-
-    ; player 2 is getting bumped
-    ;Set the state to stunned
-    lda StunnedState
-    sta PlayerState2
-
-    ;start the stun timer
-    lda StunAmountTime
-    sta Player2StunnedTimer
-
-    ;Perform the bump logic on their velocity
-    jsr BumpP2
-    
-    ;play the bump sound effect
-
-    ldy #sfxBUMP
-    jsr SFX_TRIGGER
-    jsr SetCharacter
-    
-    jmp .done
-
-.p2IsSpinning
-
-    ;Player 1 not spinning, but player 2 is spinning
-
-    ;Is player 1 stunned?
-    lda PlayerState1
-    cmp StunnedState
-    beq .done
-
-    ; player 1 is getting bumped
-    ;Set the state to stunned
-    lda StunnedState
-    sta PlayerState1
-
-    ;start the stun timer
-    lda StunAmountTime
-    sta Player1StunnedTimer
-
-    ;Perform the bump logic on their velocity
-    jsr BumpP1
-
-    ;play the bump sound effect
-
-    ldy #sfxBUMP
-    jsr SFX_TRIGGER
-    jsr SetCharacter
-
-    jmp .done
-
-.clash
-
-    ;both players are spinning, perform the clash maneuver
-    jsr CrashPlayers
-
-    ;play the crash sound effect
-    ldy #sfxCRASH
-    jsr SFX_TRIGGER
-    jsr SetCharacter
-
-.done
-
-
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; check collision with ring and perform ring collection logic
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-RingCollectionLogic subroutine
-
-.checkPlayerRingCollision
-
-    lda #%01000000
-    bit CXP0FB	; collision between player 0 and ball?
-    bne .playerCollision
-
-    jmp .noCollision
-
-.playerCollision
-
-    ;TODO: idunno why it is storing things in the wrong score
-
-    ;add 1 to the current player's score
-    lda Player1Score,y
-    sed ;set the decimal mode flag and switch to Binary Coded Decimal (BCD)
-    clc
-    adc #1
-    cld ;clear the decimal mode flag
-    sta Player1Score,y
-
-    ;do the ring collection logic
-
-    ;reset the ring to a new position
-    jsr RandomizeRingPosition
-
-    ;play the ring collection sound effect
-
-    ldy #sfxCOLLECT
-    jsr SFX_TRIGGER
-    jsr SetCharacter
-
-.noCollision
-
-    ; Clear collision registers for next frame
-    sta CXCLR
-
-
-
-
-;skip all the way down here if the game is not playing?
-
-
-AddVelocityToPosition subroutine
-    ;is the player moving right?
-    lda XDirRight1,y
-    bne .AddHorizontalVelocityToPosition
-
-    ;the player is mvoing left, subtract their position
-    lda XPos1,y    ; Load first value into accumulator
-    sec                ; Clear carry flag before addition
-    sbc XVel1,y   ; Add second value to accumulator
-    sta XPos1,y         ; Store the sum in result memory location
-
-    ;if the player position underflowed, set to 156
-    cmp #157
-    bcc .DoneClampingHorizontalUnderflow
-    lda #156
-    sta XPos1,y 
-
-.DoneClampingHorizontalUnderflow
-
-    jmp .DoneAddingHorizontalVelocityToPosition
-
-.AddHorizontalVelocityToPosition:
-
-    ;add velocity to position
-    lda XPos1,y    ; Load first value into accumulator
-    clc                ; Clear carry flag before addition
-    adc XVel1,y   ; Add second value to accumulator
-    sta XPos1,y         ; Store the sum in result memory location
-
-    ;if the player position overflowed, set to 0
-    cmp #157
-    bcc .DoneClampingHorizontalOverflow
-    lda #0
-    sta XPos1,y 
-
-.DoneClampingHorizontalOverflow
-
-.DoneAddingHorizontalVelocityToPosition
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; Set the vertical screen position of the correct player
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    ;is the player moving down?
-    lda YDirDown1,y
-    beq .AddVerticalVelocityToPosition
-
-    ;the player is moving up, subtract their position
-    lda YPos1,y    ; Load first value into accumulator
-    sec                ; Clear carry flag before addition
-    sbc YVel1,y   ; Add second value to accumulator
-    sta YPos1,y         ; Store the sum in result memory location
-
-    ;if the player position underflowed, set to 164
-    cmp #173
-    bcc .DoneClampingVerticalUnderflow
-    lda #172
-    sta YPos1,y 
-
-.DoneClampingVerticalUnderflow
-
-    jmp .DoneAddingVerticalVelocityToPosition
-
-.AddVerticalVelocityToPosition:
-
-    ;add velocity to position
-    lda YPos1,y    ; Load first value into accumulator
-    clc                ; Clear carry flag before addition
-    adc YVel1,y   ; Add second value to accumulator
-    sta YPos1,y         ; Store the sum in result memory location
-
-    ;if the player position overflowed, set to 0
-    cmp #173
-    bcc .DoneClampingVerticalOverflow
-    lda #0
-    sta YPos1,y 
-
-.DoneClampingVerticalOverflow
-
-.DoneAddingVerticalVelocityToPosition
 
 
 
@@ -1397,6 +1159,15 @@ FinishUnderscan
 
 OverScan
     TIMER_SETUP 30
+
+    jsr SetCharacter
+
+    jsr PlayerCollisionLogic
+
+    jsr RingCollectionLogic
+
+;skip all the way down here if the game is not playing?
+    jsr AddVelocityToPosition
 
     jsr SFX_UPDATE
 
@@ -1633,6 +1404,261 @@ RandomizeRingPosition:
 
 
 
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Check if the players are colliding and run the player collision logic
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+PlayerCollisionLogic subroutine
+
+    ;Dont do player collision logic in 1p mode
+    lda SelectedGame
+    bne .done
+
+    jsr CheckCharCollision
+    bne .collision
+    jmp .done
+
+.collision
+
+    ;so much collision logic
+
+    ;check if p1 is spinning
+    lda PlayerState1
+    cmp RollingState
+    beq .p1IsSpinning
+
+    ;player 1 is not spinning
+    lda PlayerState2
+    cmp RollingState
+    beq .p2IsSpinning
+
+    ;neither player is spinning, nothing else to check
+    jmp .done
+
+.p1IsSpinning
+
+    ;p1 is spinning
+
+    ;Check if p2 is spinning
+    lda PlayerState2
+    cmp RollingState
+    beq .clash
+
+    ;Is player 2 stunned?
+    cmp StunnedState
+    beq .done
+
+    ; player 2 is getting bumped
+    ;Set the state to stunned
+    lda StunnedState
+    sta PlayerState2
+
+    ;start the stun timer
+    lda StunAmountTime
+    sta Player2StunnedTimer
+
+    ;Perform the bump logic on their velocity
+    jsr BumpP2
+    
+    ;play the bump sound effect
+
+    ldy #sfxBUMP
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+    
+    jmp .done
+
+.p2IsSpinning
+
+    ;Player 1 not spinning, but player 2 is spinning
+
+    ;Is player 1 stunned?
+    lda PlayerState1
+    cmp StunnedState
+    beq .done
+
+    ; player 1 is getting bumped
+    ;Set the state to stunned
+    lda StunnedState
+    sta PlayerState1
+
+    ;start the stun timer
+    lda StunAmountTime
+    sta Player1StunnedTimer
+
+    ;Perform the bump logic on their velocity
+    jsr BumpP1
+
+    ;play the bump sound effect
+
+    ldy #sfxBUMP
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+
+    jmp .done
+
+.clash
+
+    ;both players are spinning, perform the clash maneuver
+    jsr CrashPlayers
+
+    ;play the crash sound effect
+    ldy #sfxCRASH
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+
+.done
+    rts
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; check collision with ring and perform ring collection logic
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RingCollectionLogic subroutine
+
+.checkPlayerRingCollision
+
+    lda #%01000000
+    bit CXP0FB	; collision between player 0 and ball?
+    bne .playerCollision
+
+    jmp .noCollision
+
+.playerCollision
+
+    ;TODO: idunno why it is storing things in the wrong score
+
+    ;add 1 to the current player's score
+    lda Player1Score,y
+    sed ;set the decimal mode flag and switch to Binary Coded Decimal (BCD)
+    clc
+    adc #1
+    cld ;clear the decimal mode flag
+    sta Player1Score,y
+
+    ;do the ring collection logic
+
+    ;reset the ring to a new position
+    jsr RandomizeRingPosition
+
+    ;play the ring collection sound effect
+
+    ldy #sfxCOLLECT
+    jsr SFX_TRIGGER
+    jsr SetCharacter
+
+.noCollision
+
+    ; Clear collision registers for next frame
+    sta CXCLR
+
+    rts
+
+
+
+
+
+
+
+AddVelocityToPosition subroutine
+    ;is the player moving right?
+    lda XDirRight1,y
+    bne .AddHorizontalVelocityToPosition
+
+    ;the player is mvoing left, subtract their position
+    lda XPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;if the player position underflowed, set to 156
+    cmp #157
+    bcc .DoneClampingHorizontalUnderflow
+    lda #156
+    sta XPos1,y 
+
+.DoneClampingHorizontalUnderflow
+
+    jmp .DoneAddingHorizontalVelocityToPosition
+
+.AddHorizontalVelocityToPosition:
+
+    ;add velocity to position
+    lda XPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc XVel1,y   ; Add second value to accumulator
+    sta XPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #157
+    bcc .DoneClampingHorizontalOverflow
+    lda #0
+    sta XPos1,y 
+
+.DoneClampingHorizontalOverflow
+
+.DoneAddingHorizontalVelocityToPosition
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Set the vertical screen position of the correct player
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ;is the player moving down?
+    lda YDirDown1,y
+    beq .AddVerticalVelocityToPosition
+
+    ;the player is moving up, subtract their position
+    lda YPos1,y    ; Load first value into accumulator
+    sec                ; Clear carry flag before addition
+    sbc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position underflowed, set to 164
+    cmp #173
+    bcc .DoneClampingVerticalUnderflow
+    lda #172
+    sta YPos1,y 
+
+.DoneClampingVerticalUnderflow
+
+    jmp .DoneAddingVerticalVelocityToPosition
+
+.AddVerticalVelocityToPosition:
+
+    ;add velocity to position
+    lda YPos1,y    ; Load first value into accumulator
+    clc                ; Clear carry flag before addition
+    adc YVel1,y   ; Add second value to accumulator
+    sta YPos1,y         ; Store the sum in result memory location
+
+    ;if the player position overflowed, set to 0
+    cmp #173
+    bcc .DoneClampingVerticalOverflow
+    lda #0
+    sta YPos1,y 
+
+.DoneClampingVerticalOverflow
+
+.DoneAddingVerticalVelocityToPosition
+
+    rts
+
+
+
+
+
+
+
 CheckCharCollision subroutine
     ; Check if |XPos1 - XPos2| < width(12)
     sec
@@ -1686,15 +1712,15 @@ BumpP1 subroutine
     sta XVel1
 
     ;Subtract from the player's score
-    lda Player2Score
+    lda Player1Score
     beq .skipScore
 
-    lda Player2Score
+    lda Player1Score
     sed
     sec
     sbc #1
     cld
-    sta Player2Score
+    sta Player1Score
 
 .skipScore
 
@@ -1722,15 +1748,15 @@ BumpP2 subroutine
     sta XVel2
 
     ;Subtract from the player's score
-    lda Player1Score
+    lda Player2Score
     beq .skipScore
 
-    lda Player1Score
+    lda Player2Score
     sed
     sec
     sbc #1
     cld
-    sta Player1Score
+    sta Player2Score
 
 .skipScore
 
@@ -1904,10 +1930,10 @@ SetScoreboard
     bne .drawP1Game
 
     ;Set up the scores
-    lda Player2Score
+    lda Player1Score
     ldx #0
     jsr GetBCDBitmap
-    lda Player1Score
+    lda Player2Score
     ldx #5
     jsr GetBCDBitmap
     rts
