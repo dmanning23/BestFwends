@@ -153,7 +153,10 @@ SFX_RIGHT:      ds 1    ; stored in $B2
 ;1: 1p game
 SelectedGame .byte
 
+;Variables for debouncing buttons
 PrevGameSelect .byte
+PrevP1Button .byte
+PrevP2Button .byte
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1032,15 +1035,15 @@ RunPlayerLogic subroutine
     beq .checkP1Button
 
     ;check the p2 button
-    bit INPT5
-    bmi .noButton
+    jsr CheckButton
+    beq .noButton
     jmp .setRollingState
 
 .checkP1Button
 
     ;check the p1 button
-    bit INPT4
-    bmi .noButton
+    jsr CheckButton
+    beq .noButton
     jmp .setRollingState
 
 .decrementStunnedTimer
@@ -1520,6 +1523,8 @@ InitializeVariables subroutine
     sta Player2Score
 
     sta PrevGameSelect
+    sta PrevP1Button
+    sta PrevP2Button
 
     rts
 
@@ -1810,6 +1815,63 @@ CrashPlayers subroutine
     sta YVel2
 
     rts
+
+
+
+
+CheckButton subroutine
+    ;Are we checking p1 or p2?
+    tya
+    beq .checkP1
+
+.checkP2
+    bit INPT5
+    bmi .p2NotPressed
+
+.p2Pressed
+    lda PrevP2Button    ; Load previous button state
+    bne .notPressed     ; If it was already pressed, ignore
+    lda #$1
+    sta PrevP2Button    ; Mark as pressed
+    jmp .pressed        ; Jump to pressed handler
+
+.p2NotPressed
+    lda PrevP2Button    ; Load previous button state
+    beq .notPressed     ; If it was already released, ignore
+    lda #$0
+    sta PrevP2Button    ; Mark as released
+    jmp .notPressed
+
+.checkP1
+    bit INPT4
+    bmi .p1NotPressed
+
+.p1Pressed
+    lda PrevP1Button    ; Load previous button state
+    bne .notPressed     ; If it was already pressed, ignore
+    lda #$1
+    sta PrevP1Button    ; Mark as pressed
+    jmp .pressed        ; Jump to pressed handler
+
+.p1NotPressed
+    lda PrevP1Button    ; Load previous button state
+    beq .notPressed     ; If it was already released, ignore
+    lda #$0
+    sta PrevP1Button    ; Mark as released
+    jmp .notPressed
+
+.pressed               ; Button was just pressed
+    lda #$1           ; Return 1 to indicate button press
+    rts
+
+.notPressed           ; Button was not just pressed
+    lda #$0           ; Return 0 to indicate no new press
+    rts
+
+
+
+
+
 
 
 
