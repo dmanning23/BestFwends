@@ -1160,14 +1160,18 @@ FinishUnderscan
 OverScan
     TIMER_SETUP 30
 
+    lda GameTimer
+    beq SkipHereOverscanGameOver
+
     jsr SetCharacter
 
     jsr PlayerCollisionLogic
 
     jsr RingCollectionLogic
 
-;skip all the way down here if the game is not playing?
     jsr AddVelocityToPosition
+
+SkipHereOverscanGameOver
 
     jsr SFX_UPDATE
 
