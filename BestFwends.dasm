@@ -1106,6 +1106,17 @@ RunPlayerLogic subroutine
 
 .IsRunning:
 
+    ;Check if the player has pressed the button
+    jsr CheckButton
+    beq .stillRolling
+
+    ;Set the player to running
+    lda RunningState
+    sta PlayerState1,y
+
+    jmp .doneRunningPlayerLogic
+
+.stillRolling
     ;The player is still rolling
     jmp .doneRunningPlayerLogic
 
