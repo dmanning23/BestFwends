@@ -2598,7 +2598,7 @@ LinesOfFrame subroutine
 
 .useGrayBackground
 
-    lda #$08
+    lda grayBackgroundColor
     sta COLUP1
     jmp .doneCheckingAlmostGameOver
 
