@@ -1180,6 +1180,10 @@ SkipHereOverscanGameOver
     sta COLUP0
     sta GRP1
     sta COLUP1
+
+    ;set the background back to black
+    sta COLUBK
+
     TIMER_WAIT
     ; total = 262 lines, go to next frame
     jmp NextFrame
@@ -1206,7 +1210,7 @@ InitializeVariables subroutine
     sta PF2
 
     ;set the background color
-    lda grayBackgroundColor
+    lda #$0
     sta COLUBK
 
     lda #%00010101 ; make missiles 2x-wide and set player sprites to double
@@ -1785,9 +1789,6 @@ UpdateTimer subroutine
     bne .decrementTimer  ; if the upper nybble is not 0 then time remains
 
     ;Time has ended
-
-    lda grayBackgroundColor
-    sta COLUBK
 
     jmp .doneUpdatingTimer
 
@@ -2577,6 +2578,7 @@ SetHorizPos subroutine
 
 LinesOfFrame subroutine
     ;Draw the score board for 10 lines
+
     ; First, we'll draw the scoreboard.
     ; Put the playfield into score mode (bit 2) which gives
     ; two different colors for the left/right side of
@@ -2618,19 +2620,9 @@ LinesOfFrame subroutine
     jmp .doneCheckingAlmostGameOver
 
 .skipP2
-    ; load background color into p2
-    lda GameTimer
-    beq .useGrayBackground
     
     lda #$00
     sta COLUP1
-    jmp .doneCheckingAlmostGameOver
-
-.useGrayBackground
-
-    lda grayBackgroundColor
-    sta COLUP1
-    jmp .doneCheckingAlmostGameOver
 
 .doneCheckingAlmostGameOver
 
@@ -2658,9 +2650,21 @@ LinesOfFrame subroutine
     lda #%00100100	; no reflection + ball priority + 2 pixel ball
     sta CTRLPF
 
+    lda GameTimer
+    beq .setGrayBackground
 
+    ;set the background to black
+    lda #$0
+    sta COLUBK
+    jmp .doneSettingBackground
 
-DrawScreen subroutine
+.setGrayBackground
+    ;set the background color
+    lda grayBackgroundColor
+    sta COLUBK
+
+.doneSettingBackground
+
     ;Which player is being drawn this frame?
     lda counter
     and #$01
@@ -2692,6 +2696,7 @@ DrawScreen subroutine
     jsr DrawPlayer
 
 .doneDrawingPlayer
+
     ;Switch back to bank0
     BANK_SWITCH 0,OverScan
 
@@ -2700,6 +2705,7 @@ DrawScreen subroutine
 
 
 DrawPlayer subroutine
+
     ldx #180	; X = 192 scanlines
 .LVScan
     txa		; X -> A
