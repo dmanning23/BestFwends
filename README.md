@@ -23,7 +23,7 @@ Or try to beat your high score in 1p mode, if you don't have any best fwend :(
 
 Game Select: Toggle between 2p/1p mode
 
-Start: Start the selected game
+Game Reset: Start the selected game
 
 | Action        | Result  |
 |:------------- | -----:|
