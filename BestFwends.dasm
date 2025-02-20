@@ -1145,7 +1145,76 @@ SkipToHereIfGameOver
     ; Switch to Bank 2 routine
     BANK_SWITCH 1,UpdatePlayerSprite
 
-FinishUnderscan
+FinishUnderscan subroutine
+
+    ;Set the background color
+    lda GameTimer
+    beq .setGrayBackground
+
+    ;set the background to black
+    lda #$0
+    sta COLUBK
+    jmp .doneSettingBackground
+
+.setGrayBackground
+    ;set the background color
+    lda grayBackgroundColor
+    sta COLUBK
+
+.doneSettingBackground
+
+    ;Set the player scorecard colors
+
+    ;check if the game is almost over
+    lda GameTimer
+    cmp #12
+    bcs .normalPlay
+
+    ;the game is almost over
+    lda GameTimer
+    and %00000001
+    beq .normalPlay
+
+    ;set the colors to black so they blink
+    lda #$9a
+    sta COLUP0
+
+    ;Are we drawing the p1 colors?
+    lda SelectedGame
+    bne .skipP2
+
+    lda #$1c
+    sta COLUP1
+    jmp .doneCheckingAlmostGameOver
+
+.normalPlay
+    lda #$94
+    sta COLUP0	; set color for left
+
+    lda SelectedGame
+    bne .skipP2
+
+    lda #$2c
+    sta COLUP1	; set color for right
+    jmp .doneCheckingAlmostGameOver
+
+.skipP2
+
+    lda GameTimer
+    beq .setP2Gray
+
+    ;set the P2 score ot black
+    lda #$0
+    sta COLUP1
+    jmp .doneCheckingAlmostGameOver
+
+.setP2Gray
+
+    lda grayBackgroundColor
+    sta COLUP1
+
+.doneCheckingAlmostGameOver
+
     TIMER_WAIT
 
     ; Switch to Bank 2 routine
@@ -2586,46 +2655,6 @@ LinesOfFrame subroutine
     lda #%00100010	; score mode + 2 pixel ball
     sta CTRLPF
 
-    ;check if the game is almost over
-    lda GameTimer
-    cmp #12
-    bcs .normalPlay
-
-    ;the game is almost over
-    lda GameTimer
-    and %00000001
-    beq .normalPlay
-
-    ;set the colors to black so they blink
-    lda #$9a
-    sta COLUP0
-
-    ;Are we drawing the p1 colors?
-    lda SelectedGame
-    bne .skipP2
-
-    lda #$1c
-    sta COLUP1
-    jmp .doneCheckingAlmostGameOver
-
-.normalPlay
-    lda #$94
-    sta COLUP0	; set color for left
-
-    lda SelectedGame
-    bne .skipP2
-
-    lda #$2c
-    sta COLUP1	; set color for right
-    jmp .doneCheckingAlmostGameOver
-
-.skipP2
-    
-    lda #$00
-    sta COLUP1
-
-.doneCheckingAlmostGameOver
-
     ; Now we draw all four digits.
     ldy #0		; Y will contain the frame Y coordinate
 .scanLoop1a
@@ -2650,20 +2679,7 @@ LinesOfFrame subroutine
     lda #%00100100	; no reflection + ball priority + 2 pixel ball
     sta CTRLPF
 
-    lda GameTimer
-    beq .setGrayBackground
-
-    ;set the background to black
-    lda #$0
-    sta COLUBK
-    jmp .doneSettingBackground
-
-.setGrayBackground
-    ;set the background color
-    lda grayBackgroundColor
-    sta COLUBK
-
-.doneSettingBackground
+    
 
     ;Which player is being drawn this frame?
     lda counter
